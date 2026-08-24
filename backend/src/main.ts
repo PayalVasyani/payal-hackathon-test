@@ -9,7 +9,9 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors({
     origin: [process.env.FRONTEND_URL || 'http://localhost:4200',
-      'https://payal-hackathon-test-5osdql0wv-payals-projects-73b17196.vercel.app/'],
+      'https://payal-hackathon-test.vercel.app',
+      'https://payal-hackathon-test-5osdql0wv-payals-projects-73b17196.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization, Accept',
   });
