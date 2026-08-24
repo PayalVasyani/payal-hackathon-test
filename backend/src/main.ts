@@ -8,12 +8,37 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: [process.env.FRONTEND_URL || 'http://localhost:4200',
-      'https://payal-hackathon-test.vercel.app',
-      'https://payal-hackathon-test-5osdql0wv-payals-projects-73b17196.vercel.app',
-    ],
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const allowedOrigins = [
+        'http://localhost:4200',
+        'https://payal-hackathon-test.vercel.app',
+      ];
+
+      const isVercelPreview = /^https:\/\/payal-hackathon-test-[a-z0-9]+-payals-projects-73b17196\.vercel\.app$/.test(
+        origin,
+      );
+
+      if (allowedOrigins.includes(origin) || isVercelPreview) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'), false);
+    },
+
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, Accept',
+
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+    ],
+
+    credentials: true,
   });
 
   // Basic Logging
