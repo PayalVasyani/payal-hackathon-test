@@ -17,14 +17,14 @@
     <p>{{ error }}</p>
   </div>
 
-  <div *ngIf="!loading && !error" class="card">
+  <div *ngIf="!loading && !error" class="card animate-fade-in delay-1">
     <div *ngIf="loads.length === 0" class="empty-state">
       <p>No loads found for your organization.</p>
     </div>
 
     <div *ngIf="loads.length > 0">
     <!-- Filter Bar (Broker Only) -->
-    <div *ngIf="userService.currentUserValue?.accountType === 'BROKER'" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div *ngIf="userService.currentUserValue?.accountType === 'BROKER'" class="animate-fade-in delay-2" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: var(--surface-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
       <input type="text" placeholder="Search by Load ID or Shipper Email..." class="form-control" style="flex: 2; margin-bottom: 0;" (input)="onSearch($event)">
       <select class="form-control" style="flex: 1; margin-bottom: 0;" (change)="onStatusFilter($event)">
         <option value="">All Statuses</option>
@@ -52,9 +52,9 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="animate-fade-in delay-3">
         <tr *ngFor="let load of filteredLoads">
-          <td>{{ load.id.substring(0, 8) }}...</td>
+          <td style="font-family: monospace; color: var(--primary-color);">{{ load.id.substring(0, 8) }}...</td>
           <td><span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></td>
           <td>{{ load.origin || 'N/A' }} ➔ {{ load.destination || 'N/A' }}</td>
           <td>{{ load.shipperId }}</td>

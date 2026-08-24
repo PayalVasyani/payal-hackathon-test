@@ -9,9 +9,9 @@
     {{ error }}
   </div>
 
-  <div *ngIf="user" class="card" style="margin-bottom: 2rem;">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
-      <span>{{ user.memberships[0]?.organization?.name || 'Independent Profile' }}</span>
+  <div *ngIf="user" class="card animate-fade-in delay-1" style="margin-bottom: 2rem; background: linear-gradient(135deg, hsla(215, 80%, 45%, 0.03), hsla(215, 80%, 45%, 0.06)); border: 1px solid hsla(215, 80%, 45%, 0.1);">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; border-color: hsla(215, 80%, 45%, 0.1);">
+      <span style="color: var(--primary-color);">{{ user.memberships[0]?.organization?.name || 'Independent Profile' }}</span>
       <span class="badge" style="font-size: 0.75rem; background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-light);">{{ user.accountType }}</span>
     </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -26,38 +26,38 @@
     </div>
   </div>
 
-  <h3 style="margin-bottom: 1rem;">Overview</h3>
+  <h3 class="animate-fade-in delay-2" style="margin-bottom: 1rem;">Overview</h3>
 
   <div *ngIf="loading" class="loading-state">
     Loading metrics...
   </div>
 
   <div *ngIf="!loading"
-    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;" class="animate-fade-in delay-3">
 
-    <div class="card" style="text-align: center;">
-      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Total Loads</h4>
-      <div style="font-size: 2.5rem; font-weight: 700; color: #2d3748;">{{ totalLoads }}</div>
+    <div class="card" style="text-align: center; border-top: 3px solid var(--text-muted);">
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--text-muted);">Total Loads</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);">{{ totalLoads }}</div>
     </div>
 
-    <div class="card" style="text-align: center;">
-      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Posted</h4>
-      <div style="font-size: 2.5rem; font-weight: 700; color: #3182ce;">{{ postedLoads }}</div>
+    <div class="card" style="text-align: center; border-top: 3px solid hsl(210, 100%, 60%);">
+      <h4 style="margin: 0 0 0.5rem 0; color: hsl(210, 100%, 60%);">Posted</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);">{{ postedLoads }}</div>
     </div>
 
-    <div class="card" style="text-align: center;">
-      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Carrier Assigned</h4>
-      <div style="font-size: 2.5rem; font-weight: 700; color: #d69e2e;">{{ carrierAssignedLoads }}</div>
+    <div class="card" style="text-align: center; border-top: 3px solid hsl(45, 100%, 50%);">
+      <h4 style="margin: 0 0 0.5rem 0; color: hsl(45, 100%, 50%);">Carrier Assigned</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);">{{ carrierAssignedLoads }}</div>
     </div>
 
-    <div class="card" style="text-align: center;">
-      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Confirmed Rates</h4>
-      <div style="font-size: 2.5rem; font-weight: 700; color: #38a169;">{{ confirmedRates }}</div>
+    <div class="card" style="text-align: center; border-top: 3px solid hsl(140, 70%, 50%);">
+      <h4 style="margin: 0 0 0.5rem 0; color: hsl(140, 70%, 50%);">Confirmed Rates</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: var(--text-main);">{{ confirmedRates }}</div>
     </div>
 
-    <div class="card" style="text-align: center; border: 2px solid #fed7d7;" *ngIf="complianceIssues > 0">
-      <h4 style="margin: 0 0 0.5rem 0; color: #e53e3e;">Compliance Issues</h4>
-      <div style="font-size: 2.5rem; font-weight: 700; color: #e53e3e;">{{ complianceIssues }}</div>
+    <div class="card" style="text-align: center; border: 2px solid hsl(0, 80%, 60%);" *ngIf="complianceIssues > 0">
+      <h4 style="margin: 0 0 0.5rem 0; color: hsl(0, 80%, 60%);">Compliance Issues</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: hsl(0, 80%, 60%);">{{ complianceIssues }}</div>
     </div>
 
   </div>

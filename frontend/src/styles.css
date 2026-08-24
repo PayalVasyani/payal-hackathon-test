@@ -1,22 +1,43 @@
 :root {
-  /* HSL Color Palette */
-  --primary-hue: 220;
-  --primary-gradient: linear-gradient(135deg, hsl(220, 90%, 56%), hsl(250, 90%, 60%));
-  --primary-hover: linear-gradient(135deg, hsl(220, 90%, 50%), hsl(250, 90%, 54%));
-  --primary-color: hsl(220, 90%, 56%);
+  /* Professional Corporate Light Theme */
+  --primary-hue: 215;
+  --primary-gradient: linear-gradient(135deg, hsl(215, 80%, 45%), hsl(215, 80%, 35%));
+  --primary-hover: linear-gradient(135deg, hsl(215, 80%, 40%), hsl(215, 80%, 30%));
+  --primary-color: hsl(215, 80%, 45%);
   
-  --bg-color: hsl(210, 30%, 97%);
-  --surface-color: rgba(255, 255, 255, 0.85);
-  --text-main: hsl(220, 20%, 15%);
-  --text-muted: hsl(220, 15%, 45%);
+  --bg-color: hsl(210, 25%, 97%);
+  --surface-color: hsla(0, 0%, 100%, 0.95);
+  --text-main: hsl(215, 25%, 15%);
+  --text-muted: hsl(215, 15%, 45%);
   
-  --border-light: rgba(0, 0, 0, 0.06);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --shadow-glow: 0 8px 15px -3px hsla(220, 90%, 56%, 0.4);
+  --border-light: hsla(215, 20%, 85%, 1);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 4px 10px hsla(215, 80%, 45%, 0.15);
   
   --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 hsla(0, 80%, 60%, 0.4); }
+  70% { box-shadow: 0 0 0 10px hsla(0, 80%, 60%, 0); }
+  100% { box-shadow: 0 0 0 0 hsla(0, 80%, 60%, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  opacity: 0;
+}
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+
 
 /* Base Layout */
 body {
@@ -27,9 +48,10 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(220, 90%, 56%, 0.03) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(250, 90%, 60%, 0.03) 0px, transparent 50%);
+    radial-gradient(circle at 15% 50%, hsla(215, 80%, 45%, 0.03), transparent 25%),
+    radial-gradient(circle at 85% 30%, hsla(215, 80%, 35%, 0.03), transparent 25%);
   background-attachment: fixed;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -132,7 +154,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-secondary {
   background-color: white;
   color: var(--text-main);
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--border-light);
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
@@ -240,19 +262,20 @@ h1, h2, h3, h4, h5, h6 {
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: white;
+  color: var(--text-main);
   transition: var(--transition-smooth);
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px hsla(220, 90%, 56%, 0.15);
+  box-shadow: 0 0 0 3px hsla(215, 80%, 45%, 0.15);
   background-color: white;
 }
 
