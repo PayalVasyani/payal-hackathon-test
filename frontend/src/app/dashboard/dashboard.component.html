@@ -1,10 +1,8 @@
+<app-navbar></app-navbar>
+
 <div class="page-container">
   <div class="header-section">
     <h2>Dashboard</h2>
-    <div class="actions">
-      <button class="btn btn-secondary" (click)="logout()">Logout</button>
-      <button class="btn btn-primary" routerLink="/loads">View Loads</button>
-    </div>
   </div>
 
   <div *ngIf="error" class="error-state">

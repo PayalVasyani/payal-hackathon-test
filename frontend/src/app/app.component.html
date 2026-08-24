@@ -1,1 +1,2 @@
-<router-outlet></router-outlet>
+<app-loader *ngIf="(isLoading$ | async) || !(authInitialized$ | async)"></app-loader>
+<router-outlet *ngIf="authInitialized$ | async"></router-outlet>

@@ -1,17 +1,48 @@
-<div class="login-container">
-  <h2>Login to LoadFlow</h2>
-  <form (submit)="onSubmit($event)">
-    <div>
-      <label for="email">Email</label>
-      <input type="email" id="email" [(ngModel)]="email" name="email" required />
+<div class="login-page">
+  <div class="login-card card">
+    <div class="login-header">
+      <h2>LoadFlow</h2>
+      <p>Log in to your account</p>
     </div>
-    <div>
-      <label for="password">Password</label>
-      <input type="password" id="password" [(ngModel)]="password" name="password" required />
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" class="form-control" placeholder="Enter your email" />
+        <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="error-message"
+          style="color: #e53e3e; font-size: 0.75rem; margin-top: 0.25rem;">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email address.</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" formControlName="password" class="form-control"
+          placeholder="Enter your password" />
+        <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="error-message"
+          style="color: #e53e3e; font-size: 0.75rem; margin-top: 0.25rem;">
+          Password is required.
+        </div>
+      </div>
+
+      <div *ngIf="error" class="error-state" style="font-size: 0.875rem;">
+        {{ error }}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;"
+        [disabled]="isLoading || loginForm.invalid">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Demo accounts:</p>
+      <ul style="font-size: 0.8rem; color: #718096; padding-left: 1rem; margin-top: 0.5rem; text-align: left;">
+        <li>payal.loadflow&#64;test.com (Broker Admin)</li>
+        <li>carrier.loadflow&#64;test.com (Carrier Admin)</li>
+        <li>Password is 'password123'</li>
+      </ul>
     </div>
-    <button type="submit" [disabled]="isLoading">
-      {{ isLoading ? 'Loading...' : 'Login' }}
-    </button>
-  </form>
-  <p *ngIf="error" class="error">{{ error }}</p>
+  </div>
 </div>

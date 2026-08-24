@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/auth.service';
 
@@ -13,12 +13,20 @@ export class UserService {
 
   constructor(private http: HttpClient, private authService: AuthService) {
     this.authService.session.subscribe(session => {
-      if (session) {
-        this.fetchProfile().subscribe();
-      } else {
+      if (!session) {
         this._appUser.next(null);
       }
     });
+  }
+
+  ensureProfileLoaded(): Observable<boolean> {
+    if (this.currentUserValue) {
+      return of(true);
+    }
+    return this.fetchProfile().pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
   }
 
   get appUser$(): Observable<any> {
@@ -49,5 +57,17 @@ export class UserService {
       }
     }
     return false;
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    return permissions.some(p => this.hasPermission(p));
+  }
+
+  hasAllPermissions(permissions: string[]): boolean {
+    return permissions.every(p => this.hasPermission(p));
+  }
+
+  clearUser(): void {
+    this._appUser.next(null);
   }
 }

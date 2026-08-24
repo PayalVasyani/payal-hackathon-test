@@ -1,9 +1,11 @@
+<app-navbar></app-navbar>
+
 <div class="page-container">
   <div class="header-section">
     <h2>Load Details</h2>
     <div class="actions">
-      <button class="btn btn-outline" routerLink="/loads">Back to Loads</button>
-      <button class="btn btn-secondary" *ngIf="load" (click)="fetchLoad(load.id)">Refresh</button>
+      <button class="btn btn-secondary" *ngIf="load" (click)="fetchLoad(load.id, true)">Refresh</button>
+      <a routerLink="/loads" class="btn btn-secondary">Back to Loads</a>
     </div>
   </div>
 
@@ -90,8 +92,11 @@
 
         <form [formGroup]="assignForm" (ngSubmit)="onAssignCarrier()">
           <div class="form-group">
-            <label>Carrier Org ID</label>
+            <label>Carrier Org ID <span style="font-size: 0.75rem; font-weight: normal; color: #718096; margin-left: 0.5rem;">(Test ID: c1b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a1c)</span></label>
             <input type="text" formControlName="carrierOrganizationId" class="form-control" placeholder="Enter Carrier ID">
+            <div *ngIf="assignForm.get('carrierOrganizationId')?.touched && assignForm.get('carrierOrganizationId')?.invalid" style="color: #e53e3e; font-size: 0.75rem; margin-top: 0.25rem;">
+              Carrier Organization ID is required.
+            </div>
           </div>
           
           <div class="form-group" *ngIf="complianceBlocked && canOverrideCompliance">
@@ -101,7 +106,7 @@
             </label>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="assignForm.invalid">Assign</button>
+          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="assignForm.invalid || assigning">{{ assigning ? 'Assigning...' : 'Assign Carrier' }}</button>
         </form>
       </div>
 
@@ -121,7 +126,7 @@
             <label>Accessorials ($)</label>
             <input type="number" formControlName="accessorials" class="form-control" min="0">
           </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="rateForm.invalid">Submit Draft</button>
+          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="rateForm.invalid || creatingRate">{{ creatingRate ? 'Creating...' : 'Submit Draft' }}</button>
         </form>
       </div>
 

@@ -4,11 +4,12 @@ import { RouterModule, Router } from '@angular/router';
 import { LoadsService } from '../loads/services/loads.service';
 import { UserService } from '../core/services/user.service';
 import { AuthService } from '../auth/auth.service';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NavbarComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -63,12 +64,6 @@ export class DashboardComponent implements OnInit {
         this.error = 'Failed to load dashboard metrics.';
         this.loading = false;
       }
-    });
-  }
-
-  logout(): void {
-    this.authService.signOut().then(() => {
-      this.router.navigate(['/login']);
     });
   }
 }

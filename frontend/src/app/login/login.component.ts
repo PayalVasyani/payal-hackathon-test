@@ -1,48 +1,64 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  email = '';
-  password = '';
+  loginForm: FormGroup;
   isLoading = false;
   error = '';
 
   constructor(
     private authService: AuthService, 
     private router: Router,
-    private http: HttpClient
-  ) {}
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private fb: FormBuilder
+  ) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required]]
+    });
 
-  async onSubmit(event: Event) {
-    event.preventDefault();
+    if (this.route.snapshot.queryParams['sessionExpired']) {
+      this.error = 'Your session has expired. Please log in again.';
+    }
+  }
+
+  async onSubmit() {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    
     this.isLoading = true;
     this.error = '';
 
-    const { error } = await this.authService.signIn(this.email, this.password);
+    const { email, password } = this.loginForm.value;
+    const { error } = await this.authService.signIn(email, password);
     
     if (error) {
-      this.error = error.message;
+      this.error = 'Invalid email or password.';
       this.isLoading = false;
     } else {
       // Validate with backend
       this.http.get(`${environment.apiUrl}/users/me`).subscribe({
         next: (user) => {
-          this.router.navigate(['/dashboard']);
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {
-          this.error = 'Failed to fetch user from backend: ' + err.message;
+          this.error = 'Failed to fetch user from backend.';
           this.isLoading = false;
         }
       });

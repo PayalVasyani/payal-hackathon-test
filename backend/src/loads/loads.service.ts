@@ -48,12 +48,12 @@ export class LoadsService {
     if (user.accountType === 'BROKER') {
       return this.prisma.load.findMany({
         where: { brokerOrganizationId: orgId },
-        include: { rates: true },
+        include: { rates: true, carrierOrganization: true, brokerOrganization: true },
       });
     } else if (user.accountType === 'CARRIER') {
       return this.prisma.load.findMany({
         where: { carrierOrganizationId: orgId },
-        include: { rates: true },
+        include: { rates: true, carrierOrganization: true, brokerOrganization: true },
       });
     } else {
       return [];
@@ -67,6 +67,14 @@ export class LoadsService {
     if (!load) throw new NotFoundException('Load not found');
     if (load.brokerOrganizationId !== orgId) throw new ForbiddenException('Load belongs to another organization');
     if (load.status !== 'POSTED') throw new BadRequestException('Load is not in POSTED status');
+
+    const carrierOrg = await this.prisma.organization.findUnique({
+      where: { id: dto.carrierOrganizationId }
+    });
+    
+    if (!carrierOrg || carrierOrg.type !== 'CARRIER') {
+      throw new BadRequestException('Carrier organization not found.');
+    }
 
     // Check Carrier Compliance
     const compliance = await this.prisma.carrierCompliance.findUnique({

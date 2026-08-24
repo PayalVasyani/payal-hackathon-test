@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LoadsService } from '../../services/loads.service';
 import { UserService } from '../../../core/services/user.service';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-load-details',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
   templateUrl: './load-details.component.html',
   styleUrls: ['./load-details.component.css']
 })
@@ -66,9 +67,8 @@ export class LoadDetailsComponent implements OnInit {
     });
   }
 
-  fetchLoad(id: string): void {
-    this.loading = true;
-    this.loadsService.getLoad(id).subscribe({
+  fetchLoad(id: string, forceRefresh = false): void {
+    this.loadsService.getLoad(id, forceRefresh).subscribe({
       next: (data) => {
         if (!data) {
           this.error = 'Load not found.';
@@ -84,25 +84,36 @@ export class LoadDetailsComponent implements OnInit {
     });
   }
 
+  assigning = false;
+
   onAssignCarrier(): void {
-    if (this.assignForm.invalid) return;
+    if (this.assignForm.invalid) {
+      this.assignForm.markAllAsTouched();
+      return;
+    }
     
     this.assignError = '';
     this.assignSuccess = '';
+    this.assigning = true;
     const val = this.assignForm.value;
 
     this.loadsService.assignCarrier(this.load.id, val.carrierOrganizationId, val.overrideCompliance).subscribe({
       next: () => {
         this.assignSuccess = 'Carrier assigned successfully.';
         this.complianceBlocked = false;
-        this.fetchLoad(this.load.id);
+        this.assigning = false;
+        this.assignForm.reset();
+        this.fetchLoad(this.load.id, true);
       },
       error: (err) => {
+        this.assigning = false;
         if (err.status === 400 && err.error?.message?.includes('compliance blocked')) {
-          this.assignError = 'Carrier compliance failed. An authorized user must explicitly override the compliance block.';
+          this.assignError = 'Carrier compliance failed. Override is required.';
           this.complianceBlocked = true;
         } else if (err.status === 403) {
           this.assignError = 'You do not have permission to perform this action.';
+        } else if (err.status === 400 && err.error?.message?.includes('not found')) {
+          this.assignError = 'Carrier organization not found. Please select a valid carrier.';
         } else {
           this.assignError = err.error?.message || 'Failed to assign carrier.';
         }
@@ -110,19 +121,24 @@ export class LoadDetailsComponent implements OnInit {
     });
   }
 
+  creatingRate = false;
+
   onCreateRate(): void {
     if (this.rateForm.invalid) return;
     
     this.rateError = '';
     this.rateSuccess = '';
+    this.creatingRate = true;
 
     this.loadsService.createRate(this.load.id, this.rateForm.value).subscribe({
       next: () => {
         this.rateSuccess = 'Draft rate created successfully.';
+        this.creatingRate = false;
         this.rateForm.reset({ baseRate: 0, accessorials: 0 });
-        this.fetchLoad(this.load.id);
+        this.fetchLoad(this.load.id, true);
       },
       error: (err) => {
+        this.creatingRate = false;
         this.rateError = err.error?.message || 'Failed to create rate.';
       }
     });
@@ -131,7 +147,7 @@ export class LoadDetailsComponent implements OnInit {
   onConfirmRate(version: number): void {
     this.loadsService.confirmRate(this.load.id, version).subscribe({
       next: () => {
-        this.fetchLoad(this.load.id);
+        this.fetchLoad(this.load.id, true);
       },
       error: (err) => {
         alert(err.status === 403 ? 'You do not have permission to confirm this rate.' : 'Failed to confirm rate.');

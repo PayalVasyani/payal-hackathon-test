@@ -67,7 +67,7 @@ async function main() {
     create: { id: carrierAdminRoleId, organizationId: carrierOrgId, name: 'CARRIER_ADMIN' },
   });
 
-  // 5. Test Application User (Payal)
+  // 5. Test Application User (Payal - Broker)
   const testUser = await prisma.user.upsert({
     where: { id: supabaseUserId },
     update: {
@@ -99,13 +99,59 @@ async function main() {
 
   console.log(`Upserted test application user: ${testUser.email} with BROKER_ADMIN role`);
 
+  // Carrier Test User
+  const carrierSupabaseUserId = '84d8e48a-25fa-4c0c-bba0-62fcf62ae743';
+  
+  // Fix for existing local user
+  try {
+    const oldCarrier = await prisma.user.findUnique({ where: { email: 'carrier.loadflow@test.com' } });
+    if (oldCarrier && oldCarrier.id !== carrierSupabaseUserId) {
+      await prisma.user.update({
+        where: { id: oldCarrier.id },
+        data: { id: carrierSupabaseUserId }
+      });
+      console.log('Updated old carrier user ID to match Supabase UUID');
+    }
+  } catch(e) {
+    console.error('Error migrating old user ID', e);
+  }
+
+  const carrierTestUser = await prisma.user.upsert({
+    where: { id: carrierSupabaseUserId },
+    update: {
+      email: 'carrier.loadflow@test.com',
+      name: 'Carrier LoadFlow Test',
+      accountType: 'CARRIER',
+    },
+    create: {
+      id: carrierSupabaseUserId,
+      email: 'carrier.loadflow@test.com',
+      name: 'Carrier LoadFlow Test',
+      accountType: 'CARRIER',
+    },
+  });
+
+  await prisma.organizationMembership.upsert({
+    where: { userId_organizationId: { userId: carrierSupabaseUserId, organizationId: carrierOrgId } },
+    update: {},
+    create: { userId: carrierSupabaseUserId, organizationId: carrierOrgId },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: carrierSupabaseUserId, roleId: carrierAdminRoleId } },
+    update: {},
+    create: { userId: carrierSupabaseUserId, roleId: carrierAdminRoleId },
+  });
+
+  console.log(`Upserted test application user: ${carrierTestUser.email} with CARRIER_ADMIN role`);
+
   // 8. Map Permissions to Roles
   const brokerAdminPermissions = [
-    'load.read', 'load.create', 'load.assign_carrier', 
-    'load.override_compliance_flag', 'load.update_status', 
+    'load.read', 'load.create', 'load.assign_carrier',
+    'load.override_compliance_flag', 'load.update_status',
     'rate.create', 'staff.manage'
   ];
-  
+
   const carrierAdminPermissions = [
     'load.read', 'rate.confirm', 'pod.upload', 'load.update_status'
   ];

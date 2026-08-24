@@ -10,6 +10,7 @@ export class AuthService {
   private supabase: SupabaseClient;
   private _currentUser = new BehaviorSubject<User | null>(null);
   private _session = new BehaviorSubject<Session | null>(null);
+  private _initialized = new BehaviorSubject<boolean>(false);
 
   constructor() {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
@@ -17,12 +18,18 @@ export class AuthService {
     this.supabase.auth.getSession().then(({ data: { session } }) => {
       this._session.next(session);
       this._currentUser.next(session?.user ?? null);
+      this._initialized.next(true);
     });
 
     this.supabase.auth.onAuthStateChange((_event, session) => {
       this._session.next(session);
       this._currentUser.next(session?.user ?? null);
+      this._initialized.next(true);
     });
+  }
+
+  get initialized$(): Observable<boolean> {
+    return this._initialized.asObservable();
   }
 
   get currentUser(): Observable<User | null> {
@@ -35,6 +42,10 @@ export class AuthService {
 
   get sessionValue(): Session | null {
     return this._session.value;
+  }
+
+  async getSession() {
+    return this.supabase.auth.getSession();
   }
 
   async signIn(email: string, password: string) {

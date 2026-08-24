@@ -19,9 +19,11 @@ export class LoadsService {
     );
   }
 
-  getLoad(id: string): Observable<any> {
-    const cached = this.cachedLoads.find(l => l.id === id);
-    if (cached) return of(cached);
+  getLoad(id: string, forceRefresh = false): Observable<any> {
+    if (!forceRefresh) {
+      const cached = this.cachedLoads.find(l => l.id === id);
+      if (cached) return of(cached);
+    }
     
     // Fallback: fetch all and find
     return this.getLoads().pipe(

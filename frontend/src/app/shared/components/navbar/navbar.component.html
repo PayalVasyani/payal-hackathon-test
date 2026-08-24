@@ -1,0 +1,15 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <a routerLink="/dashboard" class="brand-logo">LoadFlow</a>
+    </div>
+    <div class="navbar-links">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+      <a routerLink="/loads" routerLinkActive="active" class="nav-link">Loads</a>
+    </div>
+    <div class="navbar-user">
+      <span class="user-email">{{ userEmail }}</span>
+      <button class="btn btn-sm btn-outline nav-logout" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</nav>
