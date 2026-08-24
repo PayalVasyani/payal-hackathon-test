@@ -6,6 +6,8 @@
     <div class="navbar-links">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
       <a routerLink="/loads" routerLinkActive="active" class="nav-link">Loads</a>
+      <a *ngIf="userService.currentUserValue?.accountType === 'CARRIER'" routerLink="/compliance" routerLinkActive="active" class="nav-link">Compliance</a>
+      <a *ngIf="userService.hasPermission('staff.manage')" routerLink="/settings" routerLinkActive="active" class="nav-link">Settings</a>
     </div>
     <div class="navbar-user">
       <span class="user-email">{{ userEmail }}</span>

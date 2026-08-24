@@ -1,0 +1,61 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="header-section">
+    <h2>Carrier Compliance Profile</h2>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading compliance records...</p>
+  </div>
+
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="success" style="padding: 1rem; background-color: #f0fff4; border-left: 4px solid #48bb78; color: #2f855a; margin-bottom: 1.5rem; border-radius: 4px;">
+    {{ success }}
+  </div>
+
+  <div class="card" *ngIf="!loading && userService.currentUserValue?.accountType === 'CARRIER'" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">Update Compliance Information</div>
+    
+    <form [formGroup]="complianceForm" (ngSubmit)="onSubmit()">
+      
+      <div class="form-group">
+        <label>Insurance Expiry Date</label>
+        <input type="date" formControlName="insuranceExpiry" class="form-control">
+        <small style="color: #718096; margin-top: 0.25rem; display: block;">If the expiry date passes, your carrier account will be automatically flagged.</small>
+      </div>
+
+      <div class="form-group">
+        <label>MC/DOT Authority Status</label>
+        <select formControlName="mcDotStatus" class="form-control">
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="INACTIVE">INACTIVE</option>
+          <option value="REVOKED">REVOKED</option>
+          <option value="PENDING">PENDING</option>
+        </select>
+        <small style="color: #718096; margin-top: 0.25rem; display: block;">Any status other than ACTIVE will trigger a compliance block on load assignments.</small>
+      </div>
+
+      <div class="form-group">
+        <label>Approved Equipment</label>
+        <div *ngFor="let eq of availableEquipment" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" 
+                 [value]="eq" 
+                 [checked]="complianceForm.get('approvedEquipment')?.value.includes(eq)"
+                 (change)="onEquipmentChange($event)"
+                 style="width: auto; margin-bottom: 0;">
+          <span>{{ eq }}</span>
+        </div>
+        <small style="color: #718096; margin-top: 0.25rem; display: block;">If a load requires an equipment type you are not approved for, you cannot be dispatched.</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" [disabled]="complianceForm.invalid || saving">
+        {{ saving ? 'Saving...' : 'Save Compliance Record' }}
+      </button>
+
+    </form>
+  </div>
+</div>

@@ -22,19 +22,20 @@
     <!-- Left Column: Summary and Rates -->
     <div>
       <div class="card">
-        <div class="card-header">Summary</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div>
-            <p><strong>Load ID:</strong> {{ load.id }}</p>
-            <p><strong>Status:</strong> <span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></p>
-            <p><strong>Created:</strong> {{ load.createdAt | date:'short' }}</p>
-          </div>
-          <div>
-            <p><strong>Shipper:</strong> {{ load.shipperId }}</p>
-            <p><strong>Broker:</strong> {{ load.brokerOrganization?.name || 'N/A' }}</p>
-            <p><strong>Carrier:</strong> {{ load.carrierOrganization?.name || 'Unassigned' }}</p>
-          </div>
-        </div>
+        <div class="card-header">Load Details</div>
+        <p><strong>Load ID:</strong> {{ load.id }}</p>
+        <p><strong>Status:</strong> <span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></p>
+        <p><strong>Shipper ID:</strong> {{ load.shipperId }}</p>
+        <p><strong>Broker:</strong> {{ load.brokerOrganization?.name || 'N/A' }}</p>
+        <p><strong>Carrier:</strong> {{ load.carrierOrganization?.name || 'Unassigned' }}</p>
+        <p><strong>Compliance:</strong> <span class="badge" [ngClass]="'badge-' + load.complianceStatus.toLowerCase()">{{ load.complianceStatus }}</span></p>
+        
+        <!-- New Freight Details -->
+        <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+        <p><strong>Origin:</strong> {{ load.origin || 'N/A' }}</p>
+        <p><strong>Destination:</strong> {{ load.destination || 'N/A' }}</p>
+        <p><strong>Equipment:</strong> {{ load.equipmentType || 'N/A' }}</p>
+        <p><strong>Commodity:</strong> {{ load.commodity || 'N/A' }}</p>
       </div>
 
       <div class="card">
@@ -70,7 +71,7 @@
               <td><strong>${{ rate.total }}</strong></td>
               <td><span class="badge" [ngClass]="'badge-' + rate.status.toLowerCase()">{{ rate.status }}</span></td>
               <td>
-                <button *ngIf="rate.status === 'DRAFT' && canConfirmRate" class="btn btn-sm btn-primary" (click)="onConfirmRate(rate.version)">
+                <button *ngIf="rate.status === 'DRAFT' && canConfirmRate && load.status === 'CARRIER_ASSIGNED'" class="btn btn-sm btn-primary" (click)="onConfirmRate(rate.version)">
                   Confirm Rate
                 </button>
               </td>
@@ -92,10 +93,19 @@
 
         <form [formGroup]="assignForm" (ngSubmit)="onAssignCarrier()">
           <div class="form-group">
-            <label>Carrier Org ID <span style="font-size: 0.75rem; font-weight: normal; color: #718096; margin-left: 0.5rem;">(Test ID: c1b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a1c)</span></label>
-            <input type="text" formControlName="carrierOrganizationId" class="form-control" placeholder="Enter Carrier ID">
+            <label>Select Carrier Organization</label>
+            <div *ngIf="loadingCarriers" class="text-muted" style="font-size: 0.875rem;">Loading carriers...</div>
+            <div *ngIf="!loadingCarriers && carriers.length === 0" class="error-text" style="font-size: 0.875rem;">
+              No carrier organizations available.
+            </div>
+            <select formControlName="carrierOrganizationId" class="form-control" *ngIf="!loadingCarriers && carriers.length > 0">
+              <option value="" disabled selected>Select a carrier...</option>
+              <option *ngFor="let carrier of carriers" [value]="carrier.id">
+                {{ carrier.name }}
+              </option>
+            </select>
             <div *ngIf="assignForm.get('carrierOrganizationId')?.touched && assignForm.get('carrierOrganizationId')?.invalid" style="color: #e53e3e; font-size: 0.75rem; margin-top: 0.25rem;">
-              Carrier Organization ID is required.
+              Carrier Organization is required.
             </div>
           </div>
           
@@ -128,6 +138,51 @@
           </div>
           <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="rateForm.invalid || creatingRate">{{ creatingRate ? 'Creating...' : 'Submit Draft' }}</button>
         </form>
+      </div>
+
+      <!-- Update Status Panel -->
+      <div class="card" *ngIf="canUpdateStatus && getNextState()">
+        <div class="card-header">Status Actions</div>
+        
+        <div *ngIf="statusError" class="error-state" style="font-size: 0.875rem;">{{ statusError }}</div>
+
+        <p style="margin-bottom: 1rem; font-size: 0.875rem; color: #4a5568;">
+          You can progress this load to the next operational state.
+        </p>
+
+        <button class="btn btn-primary" style="width: 100%" (click)="onUpdateStatus()" [disabled]="updatingStatus">
+          {{ updatingStatus ? 'Updating...' : 'Move to ' + getNextState() }}
+        </button>
+      </div>
+
+      <!-- POD Upload Panel (Carrier) -->
+      <div class="card" *ngIf="canUploadPod && (load.status === 'DELIVERED' || load.status === 'POD_VERIFIED')">
+        <div class="card-header">Upload Proof of Delivery</div>
+        
+        <div *ngIf="podError" class="error-state" style="font-size: 0.875rem;">{{ podError }}</div>
+        <div *ngIf="podSuccess" style="padding: 0.75rem; background-color: #f0fff4; color: #2f855a; margin-bottom: 1rem; border-radius: 4px;">{{ podSuccess }}</div>
+
+        <p style="margin-bottom: 1rem; font-size: 0.875rem; color: #4a5568;">
+          Upload the signed Proof of Delivery (POD) document to verify delivery and proceed to invoicing.
+        </p>
+
+        <input type="file" (change)="onFileSelected($event)" accept="image/*,application/pdf" style="margin-bottom: 1rem; width: 100%;">
+        
+        <button class="btn btn-primary" style="width: 100%" (click)="onUploadPod()" [disabled]="!podFile || uploadingPod">
+          {{ uploadingPod ? 'Uploading...' : 'Submit POD' }}
+        </button>
+      </div>
+
+      <!-- POD Viewer Panel -->
+      <div class="card" *ngIf="load.podDocuments && load.podDocuments.length > 0">
+        <div class="card-header">Proof of Delivery Documents</div>
+        
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li *ngFor="let pod of load.podDocuments" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <span style="font-size: 0.875rem; color: #4a5568;">{{ pod.fileName }}</span>
+            <button class="btn btn-sm btn-secondary" (click)="viewPod(pod)">View</button>
+          </li>
+        </ul>
       </div>
 
     </div>

@@ -24,6 +24,18 @@ export class LoadsController {
     return this.loadsService.getLoads(req.appUser);
   }
 
+  @Get(':id')
+  @RequirePermissions('load.read')
+  async getLoadById(@Param('id') id: string, @Req() req: any) {
+    return this.loadsService.getLoadById(id, req.appUser);
+  }
+
+  @Post(':id/pod')
+  @RequirePermissions('pod.upload')
+  async uploadPod(@Param('id') id: string, @Body() dto: import('./dto/upload-pod.dto').UploadPodDto, @Req() req: any) {
+    return this.loadsService.uploadPod(id, dto, req.appUser);
+  }
+
   @Patch(':id/assign-carrier')
   @RequirePermissions('load.assign_carrier')
   async assignCarrier(@Param('id') id: string, @Body() dto: AssignCarrierDto, @Req() req: any) {
@@ -44,5 +56,11 @@ export class LoadsController {
   @RequirePermissions('rate.confirm')
   async confirmRate(@Param('id') id: string, @Param('version') version: string, @Req() req: any) {
     return this.loadsService.confirmRate(id, Number(version), req.appUser);
+  }
+
+  @Patch(':id/status')
+  @RequirePermissions('load.update_status')
+  async updateStatus(@Param('id') id: string, @Body() dto: import('./dto/update-status.dto').UpdateStatusDto, @Req() req: any) {
+    return this.loadsService.updateStatus(id, dto, req.appUser);
   }
 }

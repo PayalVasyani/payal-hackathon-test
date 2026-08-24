@@ -1,0 +1,130 @@
+<app-navbar></app-navbar>
+
+<div class="page-container">
+  <div class="header-section">
+    <h2>Admin Settings</h2>
+    <div class="actions">
+      <button class="btn" [ngClass]="activeTab === 'STAFF' ? 'btn-primary' : 'btn-outline'" (click)="switchTab('STAFF')">Manage Staff</button>
+      <button class="btn" [ngClass]="activeTab === 'ROLES' ? 'btn-primary' : 'btn-outline'" (click)="switchTab('ROLES')">Manage Roles</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading settings...</p>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <!-- STAFF TAB -->
+    <div *ngIf="activeTab === 'STAFF'" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+      <div class="card">
+        <div class="card-header">Staff Members</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Roles</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of staffList">
+              <td>{{ member.name }}</td>
+              <td>{{ member.email }}</td>
+              <td>
+                <span class="badge badge-posted" style="margin-right: 4px;" *ngFor="let r of member.roles">{{ r.role?.name }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Create Staff Account</div>
+        <div *ngIf="staffError" class="error-state">{{ staffError }}</div>
+        <div *ngIf="staffSuccess" style="padding: 1rem; background-color: #f0fff4; color: #2f855a; margin-bottom: 1rem;">{{ staffSuccess }}</div>
+        
+        <form [formGroup]="staffForm" (ngSubmit)="onInviteStaff()">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" formControlName="name" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" formControlName="email" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Temporary Password</label>
+            <input type="password" formControlName="password" class="form-control" placeholder="Give this to the staff member">
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select formControlName="roleId" class="form-control">
+              <option value="" disabled selected>Select a role...</option>
+              <option *ngFor="let role of rolesList" [value]="role.id">{{ role.name }}</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="staffForm.invalid || savingStaff">
+            {{ savingStaff ? 'Creating...' : 'Create Staff Account' }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ROLES TAB -->
+    <div *ngIf="activeTab === 'ROLES'" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+      <div class="card">
+        <div class="card-header">Custom Roles</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Role Name</th>
+              <th>Permissions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let role of rolesList">
+              <td><strong>{{ role.name }}</strong></td>
+              <td>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                  <span class="badge badge-draft" *ngFor="let rp of role.permissions">{{ rp.permission?.code }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Create New Role</div>
+        <div *ngIf="roleError" class="error-state">{{ roleError }}</div>
+        <div *ngIf="roleSuccess" style="padding: 1rem; background-color: #f0fff4; color: #2f855a; margin-bottom: 1rem;">{{ roleSuccess }}</div>
+        
+        <form [formGroup]="roleForm" (ngSubmit)="onCreateRole()">
+          <div class="form-group">
+            <label>Role Name</label>
+            <input type="text" formControlName="name" class="form-control" placeholder="e.g. Junior Dispatcher">
+          </div>
+          
+          <div class="form-group">
+            <label>Assign Permissions</label>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <label *ngFor="let perm of permissionsList" style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                <input type="checkbox" (change)="onRolePermissionToggle($event, perm.id)">
+                <span>
+                  {{ perm.code }}
+                  <span style="display: block; font-size: 0.75rem; color: #718096;">{{ perm.description }}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" [disabled]="roleForm.invalid || savingRole">
+            {{ savingRole ? 'Creating...' : 'Create Custom Role' }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

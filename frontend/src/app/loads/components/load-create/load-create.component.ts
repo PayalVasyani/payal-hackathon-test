@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -12,39 +12,56 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
   templateUrl: './load-create.component.html',
   styleUrls: ['./load-create.component.css']
 })
-export class LoadCreateComponent {
-  createForm: FormGroup;
-  loading = false;
+export class LoadCreateComponent implements OnInit {
+  loadForm: FormGroup;
+  submitting = false;
   error = '';
-  success = false;
+  shippers: any[] = [];
+  loadingShippers = true;
+
+  equipmentTypes = ['DRY_VAN', 'FLATBED', 'REEFER', 'STEP_DECK'];
 
   constructor(
     private fb: FormBuilder,
     private loadsService: LoadsService,
     private router: Router
   ) {
-    this.createForm = this.fb.group({
-      shipperId: ['', [Validators.required, Validators.minLength(3)]]
+    this.loadForm = this.fb.group({
+      shipperId: ['', [Validators.required]],
+      origin: ['', Validators.required],
+      destination: ['', Validators.required],
+      pickupDate: [''],
+      deliveryDate: [''],
+      equipmentType: ['', Validators.required],
+      commodity: ['', Validators.required],
+      weight: ['', Validators.min(0)],
+      targetOffer: ['', Validators.min(0)]
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadsService.getShippers().subscribe({
+      next: (data) => {
+        this.shippers = data;
+        this.loadingShippers = false;
+        if (this.shippers.length > 0) {
+          this.loadForm.patchValue({ shipperId: this.shippers[0].id });
+        }
+      },
+      error: () => this.loadingShippers = false
     });
   }
 
   onSubmit(): void {
-    if (this.createForm.invalid) return;
-
-    this.loading = true;
-    this.error = '';
-    this.success = false;
-
-    // Send only shipperId, never backend controlled fields
-    this.loadsService.createLoad({ shipperId: this.createForm.value.shipperId }).subscribe({
-      next: () => {
-        this.loading = false;
-        this.success = true;
-        this.createForm.reset();
-        setTimeout(() => this.router.navigate(['/loads']), 1500);
+    if (this.loadForm.invalid) return;
+    
+    this.submitting = true;
+    this.loadsService.createLoad(this.loadForm.value).subscribe({
+      next: (res) => {
+        this.router.navigate(['/loads', res.id]);
       },
       error: (err) => {
-        this.loading = false;
+        this.submitting = false;
         this.error = this.parseError(err);
       }
     });

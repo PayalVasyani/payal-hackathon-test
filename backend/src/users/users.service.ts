@@ -31,4 +31,25 @@ export class UsersService {
       }
     });
   }
+
+  async getShippers() {
+    return this.prisma.user.findMany({
+      where: { accountType: 'SHIPPER' },
+      select: {
+        id: true,
+        email: true,
+        name: true
+      }
+    });
+  }
+
+  async getCarrierOrgs() {
+    return this.prisma.organization.findMany({
+      where: { type: 'CARRIER' },
+      select: {
+        id: true,
+        name: true
+      }
+    });
+  }
 }

@@ -49,10 +49,11 @@ model User {
   name        String
   accountType AccountType
   
-  memberships OrganizationMembership[]
-  roles       UserRole[]
+  memberships  OrganizationMembership[]
+  roles        UserRole[]
+  podDocuments PodDocument[]
   
-  createdAt   DateTime    @default(now())
+  createdAt    DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
 
@@ -163,6 +164,16 @@ model Load {
   brokerOrganizationId String
   carrierOrganizationId String?
   
+  origin               String           @default("")
+  destination          String           @default("")
+  equipmentType        String           @default("")
+  commodity            String           @default("")
+  
+  pickupDate           DateTime?
+  deliveryDate         DateTime?
+  weight               Decimal?         @db.Decimal(10, 2)
+  targetOffer          Decimal?         @db.Decimal(10, 2)
+
   status               LoadStatus       @default(POSTED)
   complianceStatus     ComplianceStatus @default(CLEAR)
   complianceIssues     String[]         
@@ -174,6 +185,7 @@ model Load {
   carrierOrganization  Organization?    @relation("CarrierLoads", fields: [carrierOrganizationId], references: [id])
   
   rates                RateConfirmation[]
+  podDocuments         PodDocument[]
   
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
@@ -219,4 +231,20 @@ model AuditLog {
   
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+model PodDocument {
+  id           String   @id @default(uuid())
+  loadId       String
+  uploadedById String
+  fileName     String
+  fileType     String
+  fileData     String   // Base64 encoded string
+
+  load         Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+
+  uploadedAt   DateTime @default(now())
+
+  @@index([loadId])
 }

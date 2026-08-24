@@ -18,10 +18,32 @@ export class LoadsService {
   async createLoad(dto: CreateLoadDto, user: any) {
     const orgId = this.getOrgId(user);
     
-    // Create Load
+    // Validate Shipper
+    const shipper = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: dto.shipperId },
+          { email: dto.shipperId }
+        ],
+        accountType: 'SHIPPER'
+      }
+    });
+
+    if (!shipper) {
+      throw new BadRequestException(`Shipper with identifier ${dto.shipperId} not found or is not a valid shipper.`);
+    }
+    
     const load = await this.prisma.load.create({
       data: {
-        shipperId: dto.shipperId,
+        shipperId: shipper.id, // Store actual UUID
+        origin: dto.origin,
+        destination: dto.destination,
+        equipmentType: dto.equipmentType,
+        commodity: dto.commodity,
+        pickupDate: dto.pickupDate ? new Date(dto.pickupDate) : null,
+        deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : null,
+        weight: dto.weight ?? null,
+        targetOffer: dto.targetOffer ?? null,
         brokerOrganizationId: orgId,
         status: 'POSTED',
         createdBy: user.id,
@@ -43,6 +65,16 @@ export class LoadsService {
   }
 
   async getLoads(user: any) {
+    if (user.accountType === 'SHIPPER') {
+      return this.prisma.load.findMany({
+        where: { 
+          // Match by exactly user.id or user.email
+          shipperId: { in: [user.id, user.email] } 
+        },
+        include: { rates: true, carrierOrganization: true, brokerOrganization: true },
+      });
+    }
+
     const orgId = this.getOrgId(user);
     
     if (user.accountType === 'BROKER') {
@@ -58,6 +90,82 @@ export class LoadsService {
     } else {
       return [];
     }
+  }
+
+  async getLoadById(id: string, user: any) {
+    const load = await this.prisma.load.findUnique({
+      where: { id },
+      include: {
+        rates: { orderBy: { version: 'desc' } },
+        carrierOrganization: true,
+        brokerOrganization: true,
+        podDocuments: { orderBy: { uploadedAt: 'desc' } },
+      },
+    });
+
+    if (!load) throw new NotFoundException('Load not found');
+
+    const orgId = user.accountType === 'SHIPPER' ? undefined : this.getOrgId(user);
+    if (user.accountType === 'BROKER' && load.brokerOrganizationId !== orgId) {
+      throw new ForbiddenException('Load belongs to another broker organization');
+    }
+    if (user.accountType === 'CARRIER' && load.carrierOrganizationId !== orgId) {
+      throw new ForbiddenException('Load is not assigned to your carrier organization');
+    }
+    if (user.accountType === 'SHIPPER' && load.shipperId !== user.id && load.shipperId !== user.email) {
+      throw new ForbiddenException('Load belongs to another shipper');
+    }
+
+    return load;
+  }
+
+  async uploadPod(id: string, dto: import('./dto/upload-pod.dto').UploadPodDto, user: any) {
+    const orgId = this.getOrgId(user);
+
+    if (user.accountType !== 'CARRIER') {
+      throw new ForbiddenException('Only Carriers can upload Proof of Delivery.');
+    }
+
+    const load = await this.prisma.load.findUnique({ where: { id } });
+    if (!load) throw new NotFoundException('Load not found');
+    if (load.carrierOrganizationId !== orgId) {
+      throw new ForbiddenException('Load is not assigned to your carrier organization');
+    }
+
+    if (load.status !== 'DELIVERED' && load.status !== 'POD_VERIFIED') {
+      throw new BadRequestException('Load must be in DELIVERED state to upload POD.');
+    }
+
+    const pod = await this.prisma.podDocument.create({
+      data: {
+        loadId: id,
+        uploadedById: user.id,
+        fileName: dto.fileName,
+        fileType: dto.fileType,
+        fileData: dto.fileData,
+      },
+    });
+
+    let updatedLoad = load;
+    if (load.status === 'DELIVERED') {
+      updatedLoad = await this.prisma.load.update({
+        where: { id },
+        data: { status: 'POD_VERIFIED' },
+      });
+    }
+
+    await this.prisma.auditLog.create({
+      data: {
+        entityType: 'Load',
+        entityId: load.id,
+        action: 'POD_UPLOADED',
+        userId: user.id,
+        previousState: load as any,
+        newState: updatedLoad as any,
+      }
+    });
+
+    return pod;
   }
 
   async assignCarrier(id: string, dto: AssignCarrierDto, user: any) {
@@ -90,6 +198,9 @@ export class LoadsService {
       }
       if (compliance.mcDotStatus !== 'ACTIVE') {
         issues.push('AUTHORITY_INVALID');
+      }
+      if (load.equipmentType && !compliance.approvedEquipment.includes(load.equipmentType)) {
+        issues.push('UNAUTHORIZED_EQUIPMENT');
       }
     }
 
@@ -172,6 +283,7 @@ export class LoadsService {
     const load = await this.prisma.load.findUnique({ where: { id } });
     if (!load) throw new NotFoundException('Load not found');
     if (load.carrierOrganizationId !== orgId) throw new ForbiddenException('Load is not assigned to your carrier organization');
+    if (load.status !== 'CARRIER_ASSIGNED') throw new BadRequestException('Load is no longer in a state to confirm rates');
 
     const rate = await this.prisma.rateConfirmation.findUnique({
       where: { loadId_version: { loadId: id, version: Number(version) } }
@@ -210,5 +322,50 @@ export class LoadsService {
     });
 
     return confirmedRate;
+  }
+
+  async updateStatus(id: string, dto: import('./dto/update-status.dto').UpdateStatusDto, user: any) {
+    const orgId = this.getOrgId(user);
+
+    const load = await this.prisma.load.findUnique({ where: { id } });
+    if (!load) throw new NotFoundException('Load not found');
+
+    if (user.accountType === 'BROKER' && load.brokerOrganizationId !== orgId) {
+      throw new ForbiddenException('Load belongs to another broker organization');
+    }
+    if (user.accountType === 'CARRIER' && load.carrierOrganizationId !== orgId) {
+      throw new ForbiddenException('Load is not assigned to your carrier organization');
+    }
+
+    const stateProgression: Record<string, string[]> = {
+      'RATE_CONFIRMED': ['DISPATCHED'],
+      'DISPATCHED': ['IN_TRANSIT'],
+      'IN_TRANSIT': ['DELIVERED'],
+      'DELIVERED': ['POD_VERIFIED'],
+      'POD_VERIFIED': ['INVOICED_CLOSED']
+    };
+
+    const allowedNextStates = stateProgression[load.status] || [];
+    if (!allowedNextStates.includes(dto.status)) {
+      throw new BadRequestException(`Cannot transition load from ${load.status} to ${dto.status}`);
+    }
+
+    const updatedLoad = await this.prisma.load.update({
+      where: { id },
+      data: { status: dto.status }
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        entityType: 'Load',
+        entityId: load.id,
+        action: 'STATUS_UPDATED',
+        userId: user.id,
+        previousState: load as any,
+        newState: updatedLoad as any,
+      }
+    });
+
+    return updatedLoad;
   }
 }

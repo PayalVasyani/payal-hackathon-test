@@ -20,4 +20,16 @@ export class UsersController {
 
     return user;
   }
+
+  @Get('shippers')
+  @UseGuards(JwtAuthGuard)
+  async getShippers() {
+    return this.usersService.getShippers();
+  }
+
+  @Get('organizations/carriers')
+  @UseGuards(JwtAuthGuard)
+  async getCarrierOrgs() {
+    return this.usersService.getCarrierOrgs();
+  }
 }

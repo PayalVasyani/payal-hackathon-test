@@ -15,8 +15,8 @@ export class NavbarComponent implements OnInit {
   userEmail: string = '';
 
   constructor(
-    private authService: AuthService,
-    private userService: UserService,
+    public authService: AuthService,
+    public userService: UserService,
     private router: Router
   ) {}
 

@@ -1,0 +1,44 @@
+Hackathon Project: LoadFlow — Freight Brokerage Operations Suite
+1. Business Scenario
+LoadFlow is an operations platform for a freight brokerage connecting shippers and carriers. The broker posts loads, negotiates/confirms rates with carriers, and tracks shipments pickup-to-delivery, with compliance checks — a broker is liable for dispatching to a carrier with lapsed insurance or authority.
+
+Three account types:
+
+Broker (org): Admin manages staff and role permissions. Staff post loads, assign carriers, confirm rates, track shipments per their permissions.
+Carrier (org): Admin manages staff and permissions. Staff accept/decline loads, update status, upload POD, per their role.
+Shipper (individual/business, no sub-roles): views only their own load status and delivery confirmation.
+2. RBAC — build as a real system, not hardcoded roles
+Broker and Carrier are orgs; each has an Admin who creates staff and defines custom roles from a permission catalog. Shipper has no sub-roles.
+
+Permission catalog: fixed permissions (load.create, load.assign_carrier, load.override_compliance_flag, rate.confirm, load.update_status, staff.manage, pod.upload). Roles = bundles of permissions; code checks permissions, never role names.
+Admin-defined roles: e.g. Broker "Dispatcher" (load.assign_carrier + rate.confirm), "Ops Lead" (+ override). Carrier "Driver" (status update + POD) vs "Carrier Dispatch" (accept/decline). Built via UI, not hardcoded.
+Org scoping: Broker staff never see Carrier org data or vice versa, independent of permissions.
+Object-level scoping: Shippers see only their own loads; Carrier staff see only their own carrier's loads, not the whole marketplace.
+API-layer enforcement mandatory — not just UI hiding. A lower-privileged account hitting a restricted endpoint directly must be blocked.
+Bootstrap: define how the first Broker/Carrier Admin account is created vs. invited staff.
+Log permission-denied attempts (console/log file is fine).
+3. Data Model
+Rate Confirmation: versioned broker-carrier agreement (base rate + accessorials); old loads keep the version that was actually confirmed.
+Carrier compliance record: insurance expiry, MC/DOT authority status, approved equipment/commodity types.
+Load: states Posted → Carrier Assigned → Rate Confirmed → Dispatched → In Transit → Delivered → POD Verified → Invoiced/Closed; each change timestamped and attributed (audit trail).
+Shipper linkage: load ties to the shipper, the broker org, and the assigned carrier org.
+Compliance flag: load auto-flags if the carrier has expired insurance/authority or unauthorized equipment; blocks progression past "Carrier Assigned" until resolved.
+4. Feature Checklist
+Must-have:
+
+Auth for 3 account types; Broker/Carrier Admins create staff and custom roles (RBAC above), enforced server-side, org + object-level scoping
+Load CRUD, full state machine + audit trail
+Carrier compliance record CRUD
+Rate confirmation with versioning
+Compliance auto-flagging blocking progression past "Carrier Assigned"
+Dashboards per account type: Broker (load board + alerts), Carrier (assigned loads + status actions), Shipper (own load status)
+Search/filter on broker load board
+Stretch: 8. POD upload/viewer 9. Compliance expiry renewal alerts 10. Audit log viewer
+
+Working must-haves beat a half-working stretch list.
+
+5. Technical Constraints
+Any stack; state choice + one-line reason
+Must be a running app, not just code — deployed or clear run instructions
+Use an AI coding tool; keep usage visible (commits/notes)
+SQLite is fine; no specific DB required

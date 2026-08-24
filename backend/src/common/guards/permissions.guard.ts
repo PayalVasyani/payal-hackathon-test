@@ -8,15 +8,6 @@ export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector, private usersService: UsersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest();
     const user = request.user; // Set by JwtAuthGuard
 
@@ -28,6 +19,18 @@ export class PermissionsGuard implements CanActivate {
     
     if (!appUser) {
       throw new ForbiddenException('Application user not found.');
+    }
+
+    // Attach appUser to request for easy access in controllers/services
+    request.appUser = appUser;
+
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredPermissions || requiredPermissions.length === 0) {
+      return true;
     }
 
     // Extract all permissions from all roles the user has
@@ -42,15 +45,15 @@ export class PermissionsGuard implements CanActivate {
         }
       }
     }
+    if (appUser.accountType === 'SHIPPER') {
+      userPermissions.add('load.read');
+    }
 
     const hasPermission = requiredPermissions.every((permission) => userPermissions.has(permission));
 
     if (!hasPermission) {
       throw new ForbiddenException('Insufficient permissions.');
     }
-
-    // Attach appUser to request for easy access in controllers/services
-    request.appUser = appUser;
 
     return true;
   }

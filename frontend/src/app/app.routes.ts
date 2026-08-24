@@ -24,5 +24,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./loads/components/load-details/load-details.component').then(m => m.LoadDetailsComponent)
   },
+  {
+    path: 'compliance',
+    canActivate: [authGuard],
+    loadComponent: () => import('./compliance/components/compliance.component').then(m => m.ComplianceComponent)
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () => import('./admin/components/admin-settings.component').then(m => m.AdminSettingsComponent)
+  },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' }
 ];

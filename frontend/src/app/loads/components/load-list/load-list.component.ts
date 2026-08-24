@@ -14,13 +14,16 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 })
 export class LoadListComponent implements OnInit {
   loads: any[] = [];
+  filteredLoads: any[] = [];
   loading = true;
   error = '';
+  searchTerm = '';
+  statusFilter = '';
   canCreateLoad = false;
 
   constructor(
     private loadsService: LoadsService,
-    private userService: UserService,
+    public userService: UserService,
     private router: Router
   ) {}
 
@@ -35,13 +38,36 @@ export class LoadListComponent implements OnInit {
     this.loadsService.getLoads().subscribe({
       next: (data) => {
         this.loads = data;
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
         console.error('Error fetching loads', err);
-        this.error = this.parseError(err);
+        this.error = 'Failed to load data';
         this.loading = false;
       }
+    });
+  }
+
+  onSearch(event: any): void {
+    this.searchTerm = event.target.value.toLowerCase();
+    this.applyFilters();
+  }
+
+  onStatusFilter(event: any): void {
+    this.statusFilter = event.target.value;
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
+    this.filteredLoads = this.loads.filter(load => {
+      const matchesSearch = this.searchTerm === '' || 
+        load.id.toLowerCase().includes(this.searchTerm) || 
+        load.shipperId.toLowerCase().includes(this.searchTerm);
+        
+      const matchesStatus = this.statusFilter === '' || load.status === this.statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
   }
 

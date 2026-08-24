@@ -23,6 +23,8 @@ export class LoadDetailsComponent implements OnInit {
   canOverrideCompliance = false;
   canCreateRate = false;
   canConfirmRate = false;
+  canUpdateStatus = false;
+  canUploadPod = false;
 
   // Forms
   assignForm: FormGroup;
@@ -32,6 +34,7 @@ export class LoadDetailsComponent implements OnInit {
   assignSuccess = '';
   rateError = '';
   rateSuccess = '';
+  statusError = '';
   
   complianceBlocked = false;
 
@@ -53,16 +56,65 @@ export class LoadDetailsComponent implements OnInit {
     });
   }
 
+  // Carriers
+  carriers: any[] = [];
+  loadingCarriers = false;
+
   ngOnInit(): void {
     this.canAssignCarrier = this.userService.hasPermission('load.assign_carrier');
     this.canOverrideCompliance = this.userService.hasPermission('load.override_compliance_flag');
     this.canCreateRate = this.userService.hasPermission('rate.create');
     this.canConfirmRate = this.userService.hasPermission('rate.confirm');
+    this.canUpdateStatus = this.userService.hasPermission('load.update_status');
+    this.canUploadPod = this.userService.hasPermission('pod.upload');
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.fetchLoad(id);
+      }
+    });
+
+    if (this.canAssignCarrier) {
+      this.loadingCarriers = true;
+      this.loadsService.getCarrierOrgs().subscribe({
+        next: (data) => {
+          this.carriers = data;
+          this.loadingCarriers = false;
+        },
+        error: () => this.loadingCarriers = false
+      });
+    }
+  }
+
+  getNextState(): string | null {
+    if (!this.load) return null;
+    const progression: any = {
+      'RATE_CONFIRMED': 'DISPATCHED',
+      'DISPATCHED': 'IN_TRANSIT',
+      'IN_TRANSIT': 'DELIVERED',
+      'DELIVERED': 'POD_VERIFIED',
+      'POD_VERIFIED': 'INVOICED_CLOSED'
+    };
+    return progression[this.load.status] || null;
+  }
+
+  updatingStatus = false;
+  onUpdateStatus(): void {
+    const nextState = this.getNextState();
+    if (!nextState) return;
+
+    this.updatingStatus = true;
+    this.statusError = '';
+
+    this.loadsService.updateStatus(this.load.id, nextState).subscribe({
+      next: () => {
+        this.updatingStatus = false;
+        this.fetchLoad(this.load.id, true);
+      },
+      error: (err) => {
+        this.updatingStatus = false;
+        this.statusError = err.error?.message || 'Failed to update status.';
       }
     });
   }
@@ -153,5 +205,59 @@ export class LoadDetailsComponent implements OnInit {
         alert(err.status === 403 ? 'You do not have permission to confirm this rate.' : 'Failed to confirm rate.');
       }
     });
+  }
+
+  podFile: { fileName: string; fileType: string; fileData: string } | null = null;
+  uploadingPod = false;
+  podError = '';
+  podSuccess = '';
+
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.podFile = {
+          fileName: file.name,
+          fileType: file.type,
+          fileData: (reader.result as string).split(',')[1] // Get base64 part
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onUploadPod(): void {
+    if (!this.podFile) return;
+
+    this.uploadingPod = true;
+    this.podError = '';
+    this.podSuccess = '';
+
+    this.loadsService.uploadPod(this.load.id, this.podFile).subscribe({
+      next: () => {
+        this.uploadingPod = false;
+        this.podSuccess = 'Proof of Delivery uploaded successfully!';
+        this.podFile = null;
+        this.fetchLoad(this.load.id, true);
+      },
+      error: (err) => {
+        this.uploadingPod = false;
+        this.podError = err.error?.message || 'Failed to upload POD.';
+      }
+    });
+  }
+
+  viewPod(pod: any): void {
+    if (!pod.fileData) return;
+    const byteCharacters = atob(pod.fileData);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: pod.fileType });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   }
 }

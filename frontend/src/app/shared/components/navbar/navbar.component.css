@@ -1,9 +1,14 @@
 .navbar {
-  background-color: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--surface-color);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
   padding: 0 2rem;
-  height: 64px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  height: 72px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar-container {
@@ -21,48 +26,79 @@
 }
 
 .brand-logo {
-  font-size: 1.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #2b6cb0;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-decoration: none;
+  letter-spacing: -0.03em;
 }
 
 .navbar-links {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   flex: 1;
-  margin-left: 3rem;
+  margin-left: 4rem;
 }
 
 .nav-link {
-  color: #4a5568;
+  color: var(--text-muted);
   text-decoration: none;
+  font-family: 'Inter', sans-serif;
   font-weight: 500;
+  font-size: 0.95rem;
   padding: 0.5rem 0;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  transition: var(--transition-smooth);
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--primary-gradient);
+  transition: var(--transition-smooth);
+  border-radius: 2px;
 }
 
 .nav-link:hover {
-  color: #2b6cb0;
+  color: var(--primary-color);
+}
+
+.nav-link:hover::after {
+  width: 100%;
 }
 
 .nav-link.active {
-  color: #2b6cb0;
-  border-bottom-color: #2b6cb0;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  width: 100%;
+  background: var(--primary-color);
 }
 
 .navbar-user {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .user-email {
-  color: #718096;
-  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .nav-logout {
-  border-color: #cbd5e0;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
 }

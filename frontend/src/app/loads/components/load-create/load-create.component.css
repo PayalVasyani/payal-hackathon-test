@@ -1,1 +1,12 @@
-/* Empty styles */
+.form-row.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .form-row.split {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

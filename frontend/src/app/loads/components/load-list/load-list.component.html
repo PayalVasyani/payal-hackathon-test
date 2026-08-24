@@ -22,25 +22,45 @@
       <p>No loads found for your organization.</p>
     </div>
 
-    <table *ngIf="loads.length > 0" class="data-table">
+    <div *ngIf="loads.length > 0">
+    <!-- Filter Bar (Broker Only) -->
+    <div *ngIf="userService.currentUserValue?.accountType === 'BROKER'" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <input type="text" placeholder="Search by Load ID or Shipper Email..." class="form-control" style="flex: 2; margin-bottom: 0;" (input)="onSearch($event)">
+      <select class="form-control" style="flex: 1; margin-bottom: 0;" (change)="onStatusFilter($event)">
+        <option value="">All Statuses</option>
+        <option value="POSTED">POSTED</option>
+        <option value="CARRIER_ASSIGNED">CARRIER_ASSIGNED</option>
+        <option value="RATE_CONFIRMED">RATE_CONFIRMED</option>
+        <option value="DISPATCHED">DISPATCHED</option>
+        <option value="IN_TRANSIT">IN_TRANSIT</option>
+        <option value="DELIVERED">DELIVERED</option>
+        <option value="POD_VERIFIED">POD_VERIFIED</option>
+        <option value="INVOICED_CLOSED">INVOICED_CLOSED</option>
+      </select>
+    </div>
+
+    <table class="data-table">
       <thead>
         <tr>
-          <th>ID</th>
+          <th>Load ID</th>
           <th>Status</th>
-          <th>Shipper</th>
+          <th>Origin ➔ Destination</th>
+          <th>Shipper ID</th>
+          <th>Broker</th>
           <th>Carrier</th>
           <th>Compliance</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let load of loads">
+        <tr *ngFor="let load of filteredLoads">
           <td>{{ load.id.substring(0, 8) }}...</td>
           <td><span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></td>
+          <td>{{ load.origin || 'N/A' }} ➔ {{ load.destination || 'N/A' }}</td>
           <td>{{ load.shipperId }}</td>
+          <td>{{ load.brokerOrganization?.name || 'N/A' }}</td>
           <td>{{ load.carrierOrganization?.name || 'Unassigned' }}</td>
-          <td><span class="badge" [ngClass]="'badge-' + load.complianceStatus.toLowerCase()">{{ load.complianceStatus
-              }}</span></td>
+          <td><span class="badge" [ngClass]="'badge-' + load.complianceStatus.toLowerCase()">{{ load.complianceStatus }}</span></td>
           <td>
             <button class="btn btn-sm btn-outline" (click)="viewDetails(load.id)">View</button>
           </td>

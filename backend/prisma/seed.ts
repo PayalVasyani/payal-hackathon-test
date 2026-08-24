@@ -145,6 +145,36 @@ async function main() {
 
   console.log(`Upserted test application user: ${carrierTestUser.email} with CARRIER_ADMIN role`);
 
+  // --- Example Roles (for easier demo, though requirement says build via UI) ---
+  const brokerDispatcherRoleId = 'b1b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a11';
+  await prisma.role.upsert({
+    where: { organizationId_name: { organizationId: brokerOrgId, name: 'Dispatcher' } },
+    update: {},
+    create: { id: brokerDispatcherRoleId, organizationId: brokerOrgId, name: 'Dispatcher' },
+  });
+
+  const brokerOpsLeadRoleId = 'b2b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a22';
+  await prisma.role.upsert({
+    where: { organizationId_name: { organizationId: brokerOrgId, name: 'Ops Lead' } },
+    update: {},
+    create: { id: brokerOpsLeadRoleId, organizationId: brokerOrgId, name: 'Ops Lead' },
+  });
+
+  const carrierDriverRoleId = 'c1b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a11';
+  await prisma.role.upsert({
+    where: { organizationId_name: { organizationId: carrierOrgId, name: 'Driver' } },
+    update: {},
+    create: { id: carrierDriverRoleId, organizationId: carrierOrgId, name: 'Driver' },
+  });
+
+  const carrierDispatchRoleId = 'c2b3b3a0-3b1e-4b7e-8c3e-5b1b4c3f5a22';
+  await prisma.role.upsert({
+    where: { organizationId_name: { organizationId: carrierOrgId, name: 'Carrier Dispatch' } },
+    update: {},
+    create: { id: carrierDispatchRoleId, organizationId: carrierOrgId, name: 'Carrier Dispatch' },
+  });
+
+
   // 8. Map Permissions to Roles
   const brokerAdminPermissions = [
     'load.read', 'load.create', 'load.assign_carrier',
@@ -153,7 +183,7 @@ async function main() {
   ];
 
   const carrierAdminPermissions = [
-    'load.read', 'rate.confirm', 'pod.upload', 'load.update_status'
+    'load.read', 'rate.confirm', 'pod.upload', 'load.update_status', 'staff.manage'
   ];
 
   const allPermissions = await prisma.permission.findMany();
@@ -180,9 +210,42 @@ async function main() {
     }
   }
 
-  console.log(`Mapped permissions to BROKER_ADMIN and CARRIER_ADMIN roles.`);
+  // --- Map permissions for Example Roles ---
+  const exampleRoles = [
+    { id: brokerDispatcherRoleId, perms: ['load.read', 'load.assign_carrier', 'rate.confirm', 'load.update_status'] },
+    { id: brokerOpsLeadRoleId, perms: ['load.read', 'load.assign_carrier', 'rate.confirm', 'load.update_status', 'load.override_compliance_flag'] },
+    { id: carrierDriverRoleId, perms: ['load.read', 'load.update_status', 'pod.upload'] },
+    { id: carrierDispatchRoleId, perms: ['load.read', 'rate.confirm'] },
+  ];
 
-  console.log(`Seeding finished.`);
+  for (const roleDef of exampleRoles) {
+    for (const code of roleDef.perms) {
+      const perm = allPermissions.find(p => p.code === code);
+      if (perm) {
+        await prisma.rolePermission.upsert({
+          where: { roleId_permissionId: { roleId: roleDef.id, permissionId: perm.id } },
+          update: {},
+          create: { roleId: roleDef.id, permissionId: perm.id },
+        });
+      }
+    }
+  }
+
+  console.log(`Mapped permissions to BROKER_ADMIN, CARRIER_ADMIN, and example roles.`);
+
+  // Add a test Shipper
+  const shipperUser = await prisma.user.upsert({
+    where: { email: 'shipper.loadflow@test.com' },
+    update: {},
+    create: {
+      id: 'b5bdf10e-56b6-4cc6-9a2e-f5a14211b10f', // Actual Supabase UUID
+      email: 'shipper.loadflow@test.com',
+      name: 'Shipper LoadFlow Test',
+      accountType: 'SHIPPER',
+    }
+  });
+
+  console.log('Seed completed successfully!');
 }
 
 main()
