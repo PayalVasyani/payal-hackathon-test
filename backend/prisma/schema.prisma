@@ -1,13 +1,222 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum AccountType {
+  BROKER
+  CARRIER
+  SHIPPER
+}
+
+enum OrgType {
+  BROKER
+  CARRIER
+}
+
+enum LoadStatus {
+  POSTED
+  CARRIER_ASSIGNED
+  RATE_CONFIRMED
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  POD_VERIFIED
+  INVOICED_CLOSED
+}
+
+enum ComplianceStatus {
+  CLEAR
+  BLOCKED
+  OVERRIDDEN
+}
+
+enum RateStatus {
+  DRAFT
+  CONFIRMED
+  REJECTED
+}
+
+model User {
+  id          String      @id @default(uuid()) // Corresponds to Supabase Auth UUID
+  email       String      @unique
+  name        String
+  accountType AccountType
+  
+  memberships OrganizationMembership[]
+  roles       UserRole[]
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Organization {
+  id          String      @id @default(uuid())
+  name        String
+  type        OrgType
+  
+  memberships OrganizationMembership[]
+  roles       Role[]
+
+  // If carrier, 1:1 compliance
+  carrierCompliance CarrierCompliance?
+  
+  // Loads as broker
+  brokerLoads Load[] @relation("BrokerLoads")
+  
+  // Loads as carrier
+  carrierLoads Load[] @relation("CarrierLoads")
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  description String?
+  
+  roles       RolePermission[]
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  organizationId String
+  name           String
+  
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions    RolePermission[]
+  users          UserRole[]
+  
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model CarrierCompliance {
+  id                  String       @id @default(uuid())
+  organizationId      String       @unique
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  insuranceExpiry     DateTime?
+  mcDotStatus         String?      
+  approvedEquipment   String[]     
+  approvedCommodities String[]     
+  
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  
+  @@index([organizationId])
+}
+
+model Load {
+  id                   String           @id @default(uuid())
+  shipperId            String           
+  brokerOrganizationId String
+  carrierOrganizationId String?
+  
+  status               LoadStatus       @default(POSTED)
+  complianceStatus     ComplianceStatus @default(CLEAR)
+  complianceIssues     String[]         
+  
+  confirmedRateId      String?
+  createdBy            String
+  
+  brokerOrganization   Organization     @relation("BrokerLoads", fields: [brokerOrganizationId], references: [id])
+  carrierOrganization  Organization?    @relation("CarrierLoads", fields: [carrierOrganizationId], references: [id])
+  
+  rates                RateConfirmation[]
+  
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([shipperId])
+  @@index([brokerOrganizationId])
+  @@index([carrierOrganizationId])
+  @@index([status])
+}
+
+model RateConfirmation {
+  id           String     @id @default(uuid())
+  loadId       String
+  version      Int
+  
+  baseRate     Decimal    @db.Decimal(10, 2)
+  accessorials Decimal    @db.Decimal(10, 2)
+  total        Decimal    @db.Decimal(10, 2)
+  
+  status       RateStatus @default(DRAFT)
+  createdBy    String
+  confirmedBy  String?
+  
+  load         Load       @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime   @default(now())
+  confirmedAt  DateTime?
+
+  @@unique([loadId, version])
+  @@index([loadId])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  entityType    String
+  entityId      String
+  action        String
+  userId        String
+  previousState Json?
+  newState      Json?
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }
