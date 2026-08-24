@@ -1,0 +1,49 @@
+<div class="page-container">
+  <div class="header-section">
+    <h2>Loads</h2>
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="fetchLoads()">Refresh</button>
+      <button *ngIf="canCreateLoad" class="btn btn-primary" routerLink="/loads/create">Create Load</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading loads...</p>
+  </div>
+
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error" class="card">
+    <div *ngIf="loads.length === 0" class="empty-state">
+      <p>No loads found for your organization.</p>
+    </div>
+
+    <table *ngIf="loads.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Shipper</th>
+          <th>Carrier</th>
+          <th>Compliance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let load of loads">
+          <td>{{ load.id.substring(0, 8) }}...</td>
+          <td><span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></td>
+          <td>{{ load.shipperId }}</td>
+          <td>{{ load.carrierOrganization?.name || 'Unassigned' }}</td>
+          <td><span class="badge" [ngClass]="'badge-' + load.complianceStatus.toLowerCase()">{{ load.complianceStatus
+              }}</span></td>
+          <td>
+            <button class="btn btn-sm btn-outline" (click)="viewDetails(load.id)">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+<div class="page-container">
+  <div class="header-section">
+    <h2>Create Load</h2>
+    <div class="actions">
+      <button class="btn btn-outline" routerLink="/loads">Back to Loads</button>
+    </div>
+  </div>
+
+  <div class="card" style="max-width: 600px;">
+    <div *ngIf="error" class="error-state">
+      {{ error }}
+    </div>
+
+    <div *ngIf="success" style="padding: 1rem; background-color: #f0fff4; border-left: 4px solid #48bb78; color: #2f855a; margin-bottom: 1rem;">
+      Load created successfully! Redirecting...
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="shipperId">Shipper ID</label>
+        <input 
+          id="shipperId" 
+          type="text" 
+          formControlName="shipperId" 
+          class="form-control" 
+          placeholder="e.g. shipper-123"
+        >
+        <div *ngIf="createForm.get('shipperId')?.touched && createForm.get('shipperId')?.invalid" style="color: #e53e3e; font-size: 0.875rem; margin-top: 0.25rem;">
+          Shipper ID is required and must be at least 3 characters.
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary" [disabled]="createForm.invalid || loading">
+          {{ loading ? 'Creating...' : 'Create Load' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

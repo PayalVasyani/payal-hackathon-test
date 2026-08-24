@@ -1,0 +1,130 @@
+<div class="page-container">
+  <div class="header-section">
+    <h2>Load Details</h2>
+    <div class="actions">
+      <button class="btn btn-outline" routerLink="/loads">Back to Loads</button>
+      <button class="btn btn-secondary" *ngIf="load" (click)="fetchLoad(load.id)">Refresh</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading details...</p>
+  </div>
+
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="load && !loading" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    
+    <!-- Left Column: Summary and Rates -->
+    <div>
+      <div class="card">
+        <div class="card-header">Summary</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <p><strong>Load ID:</strong> {{ load.id }}</p>
+            <p><strong>Status:</strong> <span class="badge" [ngClass]="'badge-' + load.status.toLowerCase()">{{ load.status }}</span></p>
+            <p><strong>Created:</strong> {{ load.createdAt | date:'short' }}</p>
+          </div>
+          <div>
+            <p><strong>Shipper:</strong> {{ load.shipperId }}</p>
+            <p><strong>Broker:</strong> {{ load.brokerOrganization?.name || 'N/A' }}</p>
+            <p><strong>Carrier:</strong> {{ load.carrierOrganization?.name || 'Unassigned' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Compliance</div>
+        <p><strong>Status:</strong> <span class="badge" [ngClass]="'badge-' + load.complianceStatus.toLowerCase()">{{ load.complianceStatus }}</span></p>
+        
+        <div *ngIf="load.complianceIssues && load.complianceIssues.length > 0" style="margin-top: 1rem;">
+          <strong>Compliance Issues:</strong>
+          <ul style="color: #c53030; margin-top: 0.5rem; padding-left: 1.5rem;">
+            <li *ngFor="let issue of load.complianceIssues">{{ issue }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" *ngIf="load.rates && load.rates.length > 0">
+        <div class="card-header">Rates</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Base Rate</th>
+              <th>Accessorials</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rate of load.rates">
+              <td>v{{ rate.version }}</td>
+              <td>${{ rate.baseRate }}</td>
+              <td>${{ rate.accessorials }}</td>
+              <td><strong>${{ rate.total }}</strong></td>
+              <td><span class="badge" [ngClass]="'badge-' + rate.status.toLowerCase()">{{ rate.status }}</span></td>
+              <td>
+                <button *ngIf="rate.status === 'DRAFT' && canConfirmRate" class="btn btn-sm btn-primary" (click)="onConfirmRate(rate.version)">
+                  Confirm Rate
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Column: Actions -->
+    <div>
+      
+      <!-- Assign Carrier Panel -->
+      <div class="card" *ngIf="canAssignCarrier && load.status === 'POSTED'">
+        <div class="card-header">Assign Carrier</div>
+        
+        <div *ngIf="assignError" class="error-state" style="font-size: 0.875rem;">{{ assignError }}</div>
+        <div *ngIf="assignSuccess" style="padding: 0.75rem; background-color: #f0fff4; color: #2f855a; margin-bottom: 1rem; border-radius: 4px;">{{ assignSuccess }}</div>
+
+        <form [formGroup]="assignForm" (ngSubmit)="onAssignCarrier()">
+          <div class="form-group">
+            <label>Carrier Org ID</label>
+            <input type="text" formControlName="carrierOrganizationId" class="form-control" placeholder="Enter Carrier ID">
+          </div>
+          
+          <div class="form-group" *ngIf="complianceBlocked && canOverrideCompliance">
+            <label style="display: flex; align-items: center; gap: 0.5rem; color: #c53030; font-weight: bold;">
+              <input type="checkbox" formControlName="overrideCompliance">
+              Override Compliance Block
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="assignForm.invalid">Assign</button>
+        </form>
+      </div>
+
+      <!-- Create Rate Panel -->
+      <div class="card" *ngIf="canCreateRate && load.status === 'CARRIER_ASSIGNED'">
+        <div class="card-header">Create Draft Rate</div>
+        
+        <div *ngIf="rateError" class="error-state" style="font-size: 0.875rem;">{{ rateError }}</div>
+        <div *ngIf="rateSuccess" style="padding: 0.75rem; background-color: #f0fff4; color: #2f855a; margin-bottom: 1rem; border-radius: 4px;">{{ rateSuccess }}</div>
+
+        <form [formGroup]="rateForm" (ngSubmit)="onCreateRate()">
+          <div class="form-group">
+            <label>Base Rate ($)</label>
+            <input type="number" formControlName="baseRate" class="form-control" min="1">
+          </div>
+          <div class="form-group">
+            <label>Accessorials ($)</label>
+            <input type="number" formControlName="accessorials" class="form-control" min="0">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%" [disabled]="rateForm.invalid">Submit Draft</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,57 +1,63 @@
-<div style="padding: 2rem;">
-  <h2>Dashboard</h2>
-  <div *ngIf="loading">Loading profile...</div>
-  <div *ngIf="error" style="color: red;">{{ error }}</div>
-  
-  <div *ngIf="user" style="margin-top: 1rem; border: 1px solid #ccc; padding: 1rem; border-radius: 8px;">
-    <h3>Profile Information</h3>
-    <p><strong>Name:</strong> {{ user.name }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Account Type:</strong> {{ user.accountType }}</p>
-
-    <h4 style="margin-top: 1.5rem;">Organizations</h4>
-    <ul>
-      <li *ngFor="let m of user.memberships">
-        {{ m.organization?.name }} ({{ m.organization?.type }})
-      </li>
-    </ul>
-
-    <h4 style="margin-top: 1.5rem;">Roles</h4>
-    <ul>
-      <li *ngFor="let r of user.roles">
-        {{ r.role?.name }}
-      </li>
-    </ul>
-
-    <hr style="margin: 2rem 0;">
-    <h3>Phase 2 APIs</h3>
-    
-    <div style="margin-bottom: 1rem;">
-      <input type="text" [(ngModel)]="createLoadShipperId" placeholder="Shipper ID">
-      <button (click)="createLoad()">Create Load</button>
+<div class="page-container">
+  <div class="header-section">
+    <h2>Dashboard</h2>
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="logout()">Logout</button>
+      <button class="btn btn-primary" routerLink="/loads">View Loads</button>
     </div>
+  </div>
 
-    <div style="margin-bottom: 1rem;">
-      <input type="text" [(ngModel)]="assignCarrierOrgId" placeholder="Carrier Org ID">
-    </div>
+  <div *ngIf="error" class="error-state">
+    {{ error }}
+  </div>
 
-    <h4>Loads</h4>
-    <div *ngFor="let load of loads" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
-      <p><strong>ID:</strong> {{ load.id }}</p>
-      <p><strong>Status:</strong> {{ load.status }}</p>
-      
-      <button (click)="assignCarrier(load.id)">Assign Carrier</button>
-      <button (click)="createRate(load.id)">Create Draft Rate</button>
-      
-      <div *ngIf="load.rates?.length > 0">
-        <h5>Rates:</h5>
-        <ul>
-          <li *ngFor="let rate of load.rates">
-            Version {{ rate.version }} - {{ rate.status }} (Total: {{ rate.total }})
-            <button *ngIf="rate.status === 'DRAFT'" (click)="confirmRate(load.id, rate.version)">Confirm</button>
-          </li>
-        </ul>
+  <div *ngIf="user" class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">User Profile</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Account Type:</strong> {{ user.accountType }}</p>
+      </div>
+      <div>
+        <p><strong>Organization:</strong> {{ user.memberships[0]?.organization?.name || 'N/A' }}</p>
+        <p><strong>Role:</strong> {{ user.roles[0]?.role?.name || 'N/A' }}</p>
       </div>
     </div>
+  </div>
+
+  <h3 style="margin-bottom: 1rem;">Overview</h3>
+
+  <div *ngIf="loading" class="loading-state">
+    Loading metrics...
+  </div>
+
+  <div *ngIf="!loading"
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+
+    <div class="card" style="text-align: center;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Total Loads</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: #2d3748;">{{ totalLoads }}</div>
+    </div>
+
+    <div class="card" style="text-align: center;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Posted</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: #3182ce;">{{ postedLoads }}</div>
+    </div>
+
+    <div class="card" style="text-align: center;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Carrier Assigned</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: #d69e2e;">{{ carrierAssignedLoads }}</div>
+    </div>
+
+    <div class="card" style="text-align: center;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #4a5568;">Confirmed Rates</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: #38a169;">{{ confirmedRates }}</div>
+    </div>
+
+    <div class="card" style="text-align: center; border: 2px solid #fed7d7;" *ngIf="complianceIssues > 0">
+      <h4 style="margin: 0 0 0.5rem 0; color: #e53e3e;">Compliance Issues</h4>
+      <div style="font-size: 2.5rem; font-weight: 700; color: #e53e3e;">{{ complianceIssues }}</div>
+    </div>
+
   </div>
 </div>
