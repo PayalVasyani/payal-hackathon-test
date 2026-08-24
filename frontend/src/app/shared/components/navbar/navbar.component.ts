@@ -13,6 +13,7 @@ import { UserService } from '../../../core/services/user.service';
 })
 export class NavbarComponent implements OnInit {
   userEmail: string = '';
+  userOrganization: string = '';
 
   constructor(
     public authService: AuthService,
@@ -24,6 +25,7 @@ export class NavbarComponent implements OnInit {
     this.userService.appUser$.subscribe(user => {
       if (user) {
         this.userEmail = user.email;
+        this.userOrganization = user.memberships?.[0]?.organization?.name || '';
       }
     });
   }

@@ -5,6 +5,10 @@ import { LoginComponent } from './login/login.component';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
+    path: 'register',
+    loadComponent: () => import('./register/register.component').then(m => m.RegisterComponent)
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)

@@ -1,0 +1,66 @@
+<div class="login-page">
+  <div class="login-card card">
+    <div class="login-header">
+      <h2>LoadFlow</h2>
+      <p>Create a new account</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+      <!-- Account Type -->
+      <div class="form-group">
+        <label for="accountType">I am a...</label>
+        <select id="accountType" formControlName="accountType" class="form-control" style="appearance: auto;">
+          <option value="BROKER">Freight Broker</option>
+          <option value="CARRIER">Carrier / Owner-Operator</option>
+          <option value="SHIPPER">Shipper / Customer</option>
+        </select>
+      </div>
+
+      <!-- Company Name (Hidden for Shippers) -->
+      <div class="form-group" *ngIf="registerForm.get('accountType')?.value !== 'SHIPPER'">
+        <label for="companyName">Company Name</label>
+        <input type="text" id="companyName" formControlName="companyName" class="form-control"
+          placeholder="Enter your company name" />
+      </div>
+
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" formControlName="name" class="form-control" placeholder="Enter your full name" />
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" class="form-control" placeholder="Enter your email" />
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" formControlName="password" class="form-control"
+          placeholder="Create a strong password (6+ chars)" />
+      </div>
+
+      <!-- Status Messages -->
+      <div *ngIf="error" class="error-state" style="font-size: 0.875rem; margin-top: 1rem;">
+        {{ error }}
+      </div>
+      <div *ngIf="success"
+        style="color: #48bb78; background: #f0fff4; border: 1px solid #c6f6d5; padding: 0.75rem; border-radius: 6px; font-size: 0.875rem; margin-top: 1rem;">
+        {{ success }}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;"
+        [disabled]="isLoading || registerForm.invalid">
+        {{ isLoading ? 'Registering...' : 'Create Account' }}
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #4a5568;">
+      Already have an account? <a routerLink="/login"
+        style="color: #5a67d8; font-weight: 500; text-decoration: none;">Log in here</a>
+    </div>
+  </div>
+</div>

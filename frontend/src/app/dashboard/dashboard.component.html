@@ -10,15 +10,18 @@
   </div>
 
   <div *ngIf="user" class="card" style="margin-bottom: 2rem;">
-    <div class="card-header">User Profile</div>
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+      <span>{{ user.memberships[0]?.organization?.name || 'Independent Profile' }}</span>
+      <span class="badge" style="font-size: 0.75rem; background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-light);">{{ user.accountType }}</span>
+    </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
       <div>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Account Type:</strong> {{ user.accountType }}</p>
+        <p style="margin: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem;">Email</p>
+        <p style="margin: 0; font-weight: 500;">{{ user.email }}</p>
       </div>
       <div>
-        <p><strong>Organization:</strong> {{ user.memberships[0]?.organization?.name || 'N/A' }}</p>
-        <p><strong>Role:</strong> {{ user.roles[0]?.role?.name || 'N/A' }}</p>
+        <p style="margin: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem;">Role</p>
+        <p style="margin: 0; font-weight: 500;">{{ user.roles[0]?.role?.name || 'User' }}</p>
       </div>
     </div>
   </div>

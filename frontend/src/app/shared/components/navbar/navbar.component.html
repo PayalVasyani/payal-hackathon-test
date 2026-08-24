@@ -9,8 +9,11 @@
       <a *ngIf="userService.currentUserValue?.accountType === 'CARRIER'" routerLink="/compliance" routerLinkActive="active" class="nav-link">Compliance</a>
       <a *ngIf="userService.hasPermission('staff.manage')" routerLink="/settings" routerLinkActive="active" class="nav-link">Settings</a>
     </div>
-    <div class="navbar-user">
-      <span class="user-email">{{ userEmail }}</span>
+    <div class="navbar-user" style="display: flex; align-items: center; gap: 1rem;">
+      <div style="display: flex; flex-direction: column; text-align: right;">
+        <span class="user-email" style="font-weight: 600; color: var(--text-main); font-size: 0.95rem;">{{ userOrganization || 'Independent Profile' }}</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ userEmail }}</span>
+      </div>
       <button class="btn btn-sm btn-outline nav-logout" (click)="logout()">Logout</button>
     </div>
   </div>

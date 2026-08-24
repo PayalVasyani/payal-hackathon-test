@@ -256,6 +256,42 @@ h1, h2, h3, h4, h5, h6 {
   background-color: white;
 }
 
+/* Premium Date Picker Styling */
+input[type="date"].form-control {
+  position: relative;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: var(--transition-smooth);
+  padding: 0.2rem;
+  border-radius: 4px;
+}
+
+input[type="date"].form-control::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: hsla(220, 90%, 56%, 0.1);
+}
+
+input[type="date"].form-control::-webkit-datetime-edit-month-field,
+input[type="date"].form-control::-webkit-datetime-edit-day-field,
+input[type="date"].form-control::-webkit-datetime-edit-year-field {
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: 0 0.1rem;
+  border-radius: 4px;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit-month-field:focus,
+input[type="date"].form-control::-webkit-datetime-edit-day-field:focus,
+input[type="date"].form-control::-webkit-datetime-edit-year-field:focus {
+  background-color: hsla(220, 90%, 56%, 0.15);
+  color: var(--text-main);
+}
+
 /* States */
 .loading-state, .empty-state {
   text-align: center;

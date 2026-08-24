@@ -46,7 +46,7 @@ export class UserService {
   hasPermission(permissionCode: string): boolean {
     const user = this.currentUserValue;
     if (!user || !user.roles) return false;
-    
+
     for (const role of user.roles) {
       if (role.role?.permissions) {
         for (const p of role.role.permissions) {
