@@ -9,6 +9,18 @@ export class UsersService {
   async findBySupabaseId(supabaseId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id: supabaseId },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        },
+        memberships: {
+          include: {
+            organization: true
+          }
+        }
+      }
     });
   }
 }

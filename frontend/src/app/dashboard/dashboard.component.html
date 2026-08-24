@@ -1,1 +1,26 @@
-<p>dashboard works!</p>
+<div style="padding: 2rem;">
+  <h2>Dashboard</h2>
+  <div *ngIf="loading">Loading profile...</div>
+  <div *ngIf="error" style="color: red;">{{ error }}</div>
+  
+  <div *ngIf="user" style="margin-top: 1rem; border: 1px solid #ccc; padding: 1rem; border-radius: 8px;">
+    <h3>Profile Information</h3>
+    <p><strong>Name:</strong> {{ user.name }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Account Type:</strong> {{ user.accountType }}</p>
+
+    <h4 style="margin-top: 1.5rem;">Organizations</h4>
+    <ul>
+      <li *ngFor="let m of user.memberships">
+        {{ m.organization?.name }} ({{ m.organization?.type }})
+      </li>
+    </ul>
+
+    <h4 style="margin-top: 1.5rem;">Roles</h4>
+    <ul>
+      <li *ngFor="let r of user.roles">
+        {{ r.role?.name }}
+      </li>
+    </ul>
+  </div>
+</div>
