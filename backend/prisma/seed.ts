@@ -31,6 +31,24 @@ async function main() {
     });
     console.log(`Upserted permission with code: ${permission.code}`);
   }
+
+  // Seed test user to match Supabase Auth User
+  const supabaseUserId = '51694d17-a79d-483e-8a7a-aadda38c39f1';
+  const testUser = await prisma.user.upsert({
+    where: { id: supabaseUserId },
+    update: {
+      email: 'payal.loadflow@test.com',
+      name: 'Payal LoadFlow Test',
+    },
+    create: {
+      id: supabaseUserId,
+      email: 'payal.loadflow@test.com',
+      name: 'Payal LoadFlow Test',
+      accountType: 'BROKER',
+    },
+  });
+  console.log(`Upserted test application user: ${testUser.email}`);
+
   console.log(`Seeding finished.`);
 }
 
