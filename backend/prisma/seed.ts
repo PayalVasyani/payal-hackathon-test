@@ -12,9 +12,11 @@ const prisma = new PrismaClient({
 
 async function main() {
   const permissions = [
+    { code: 'load.read', description: 'Read loads' },
     { code: 'load.create', description: 'Create a new load' },
     { code: 'load.assign_carrier', description: 'Assign a carrier to a load' },
     { code: 'load.override_compliance_flag', description: 'Override a carrier compliance block' },
+    { code: 'rate.create', description: 'Create a new rate version' },
     { code: 'rate.confirm', description: 'Confirm a rate version' },
     { code: 'load.update_status', description: 'Update the status of a load' },
     { code: 'staff.manage', description: 'Manage organization staff and roles' },
@@ -96,6 +98,43 @@ async function main() {
   });
 
   console.log(`Upserted test application user: ${testUser.email} with BROKER_ADMIN role`);
+
+  // 8. Map Permissions to Roles
+  const brokerAdminPermissions = [
+    'load.read', 'load.create', 'load.assign_carrier', 
+    'load.override_compliance_flag', 'load.update_status', 
+    'rate.create', 'staff.manage'
+  ];
+  
+  const carrierAdminPermissions = [
+    'load.read', 'rate.confirm', 'pod.upload', 'load.update_status'
+  ];
+
+  const allPermissions = await prisma.permission.findMany();
+
+  for (const code of brokerAdminPermissions) {
+    const perm = allPermissions.find(p => p.code === code);
+    if (perm) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: brokerAdminRoleId, permissionId: perm.id } },
+        update: {},
+        create: { roleId: brokerAdminRoleId, permissionId: perm.id },
+      });
+    }
+  }
+
+  for (const code of carrierAdminPermissions) {
+    const perm = allPermissions.find(p => p.code === code);
+    if (perm) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: carrierAdminRoleId, permissionId: perm.id } },
+        update: {},
+        create: { roleId: carrierAdminRoleId, permissionId: perm.id },
+      });
+    }
+  }
+
+  console.log(`Mapped permissions to BROKER_ADMIN and CARRIER_ADMIN roles.`);
 
   console.log(`Seeding finished.`);
 }

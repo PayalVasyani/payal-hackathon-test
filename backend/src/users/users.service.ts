@@ -4,15 +4,23 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async findBySupabaseId(supabaseId: string): Promise<User | null> {
+  async findBySupabaseId(supabaseId: string) {
     return this.prisma.user.findUnique({
       where: { id: supabaseId },
       include: {
         roles: {
           include: {
-            role: true
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true
+                  }
+                }
+              }
+            }
           }
         },
         memberships: {

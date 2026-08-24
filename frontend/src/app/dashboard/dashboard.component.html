@@ -22,5 +22,36 @@
         {{ r.role?.name }}
       </li>
     </ul>
+
+    <hr style="margin: 2rem 0;">
+    <h3>Phase 2 APIs</h3>
+    
+    <div style="margin-bottom: 1rem;">
+      <input type="text" [(ngModel)]="createLoadShipperId" placeholder="Shipper ID">
+      <button (click)="createLoad()">Create Load</button>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <input type="text" [(ngModel)]="assignCarrierOrgId" placeholder="Carrier Org ID">
+    </div>
+
+    <h4>Loads</h4>
+    <div *ngFor="let load of loads" style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem;">
+      <p><strong>ID:</strong> {{ load.id }}</p>
+      <p><strong>Status:</strong> {{ load.status }}</p>
+      
+      <button (click)="assignCarrier(load.id)">Assign Carrier</button>
+      <button (click)="createRate(load.id)">Create Draft Rate</button>
+      
+      <div *ngIf="load.rates?.length > 0">
+        <h5>Rates:</h5>
+        <ul>
+          <li *ngFor="let rate of load.rates">
+            Version {{ rate.version }} - {{ rate.status }} (Total: {{ rate.total }})
+            <button *ngIf="rate.status === 'DRAFT'" (click)="confirmRate(load.id, rate.version)">Confirm</button>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
