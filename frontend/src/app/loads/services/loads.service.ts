@@ -64,4 +64,8 @@ export class LoadsService {
   updateStatus(loadId: string, status: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${loadId}/status`, { status });
   }
+
+  getRouteAdvisor(origin: string, destination: string): Observable<{ advisorText: string }> {
+    return this.http.post<{ advisorText: string }>(`${this.apiUrl}/ai/advisor`, { origin, destination });
+  }
 }

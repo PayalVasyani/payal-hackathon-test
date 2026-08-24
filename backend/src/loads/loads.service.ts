@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { CreateLoadDto } from './dto/create-load.dto';
 import { AssignCarrierDto } from './dto/assign-carrier.dto';
 import { CreateRateDto } from './dto/create-rate.dto';
+import { GoogleGenAI } from '@google/genai';
 
 @Injectable()
 export class LoadsService {
@@ -367,5 +368,24 @@ export class LoadsService {
     });
 
     return updatedLoad;
+  }
+  async getRouteAdvisor(origin: string, destination: string) {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new BadRequestException('Gemini API key is not configured.');
+      }
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: `Provide a very brief 1-2 sentence summary of typical route conditions and weather for a freight truck traveling from ${origin} to ${destination}. Keep it professional and concise.`
+      });
+      
+      return { advisorText: response.text || 'Unable to generate route advice at this time.' };
+    } catch (error) {
+      console.error('Error generating route advisor:', error);
+      return { advisorText: 'AI Route Advisor is temporarily unavailable.' };
+    }
   }
 }

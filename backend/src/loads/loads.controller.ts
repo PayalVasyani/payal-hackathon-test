@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { LoadsService } from './loads.service';
 import { CreateLoadDto } from './dto/create-load.dto';
 import { AssignCarrierDto } from './dto/assign-carrier.dto';
@@ -62,5 +62,14 @@ export class LoadsController {
   @RequirePermissions('load.update_status')
   async updateStatus(@Param('id') id: string, @Body() dto: import('./dto/update-status.dto').UpdateStatusDto, @Req() req: any) {
     return this.loadsService.updateStatus(id, dto, req.appUser);
+  }
+
+  @Post('ai/advisor')
+  @RequirePermissions('load.read') // Adjust permission as necessary
+  async getRouteAdvisor(@Body() dto: { origin: string, destination: string }) {
+    if (!dto.origin || !dto.destination) {
+      throw new BadRequestException('Origin and destination are required');
+    }
+    return this.loadsService.getRouteAdvisor(dto.origin, dto.destination);
   }
 }

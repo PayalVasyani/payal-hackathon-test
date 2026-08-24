@@ -260,4 +260,31 @@ export class LoadDetailsComponent implements OnInit {
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   }
+
+  // AI Route Advisor
+  advisorLoading = false;
+  advisorText = '';
+  advisorError = '';
+
+  onGetRouteAdvisor(): void {
+    if (!this.load.origin || !this.load.destination) {
+      this.advisorError = 'Origin and destination are required for the AI Advisor.';
+      return;
+    }
+    
+    this.advisorLoading = true;
+    this.advisorError = '';
+    this.advisorText = '';
+
+    this.loadsService.getRouteAdvisor(this.load.origin, this.load.destination).subscribe({
+      next: (res) => {
+        this.advisorText = res.advisorText;
+        this.advisorLoading = false;
+      },
+      error: (err) => {
+        this.advisorError = 'Failed to load AI Advisor.';
+        this.advisorLoading = false;
+      }
+    });
+  }
 }

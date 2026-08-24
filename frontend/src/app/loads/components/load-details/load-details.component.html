@@ -36,6 +36,22 @@
         <p><strong>Destination:</strong> {{ load.destination || 'N/A' }}</p>
         <p><strong>Equipment:</strong> {{ load.equipmentType || 'N/A' }}</p>
         <p><strong>Commodity:</strong> {{ load.commodity || 'N/A' }}</p>
+
+        <!-- AI Route Advisor Section -->
+        <div *ngIf="load.origin && load.destination" style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong>🤖 AI Route & Weather Advisor</strong>
+            <button class="btn btn-sm btn-primary" (click)="onGetRouteAdvisor()" [disabled]="advisorLoading">
+              {{ advisorLoading ? 'Thinking...' : 'Get Advice' }}
+            </button>
+          </div>
+          <div *ngIf="advisorText" style="margin-top: 0.5rem; padding: 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 0.875rem;">
+            {{ advisorText }}
+          </div>
+          <div *ngIf="advisorError" style="margin-top: 0.5rem; padding: 0.75rem; background: #fee2e2; color: #b91c1c; border-radius: 4px; font-size: 0.875rem;">
+            {{ advisorError }}
+          </div>
+        </div>
       </div>
 
       <div class="card">

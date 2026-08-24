@@ -56,7 +56,14 @@ export class LoadCreateComponent implements OnInit {
     if (this.loadForm.invalid) return;
     
     this.submitting = true;
-    this.loadsService.createLoad(this.loadForm.value).subscribe({
+    
+    const payload = { ...this.loadForm.value };
+    if (payload.targetOffer === '') payload.targetOffer = null;
+    if (payload.weight === '') payload.weight = null;
+    if (payload.pickupDate === '') payload.pickupDate = null;
+    if (payload.deliveryDate === '') payload.deliveryDate = null;
+
+    this.loadsService.createLoad(payload).subscribe({
       next: (res) => {
         this.router.navigate(['/loads', res.id]);
       },
